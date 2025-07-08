@@ -2,7 +2,6 @@ import React from "react";
 import AddCategory from "./AddCategory";
 import AddSubCategory from "./AddSubCategory";
 import AddProduct from "./AddProduct";
-import Button from "../components/Button";
 import Navigation from "../components/Navigation";
 
 export default function AddNewContent() {

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { collection, getDocs, query, where } from "firebase/firestore";
+import { collection, DocumentData, getDocs } from "firebase/firestore";
 import { db } from "./firebase/firebaseInit";
 import Navigation from "./components/Navigation";
 import JsBarcode from "jsbarcode";
@@ -10,13 +10,13 @@ export default function Home() {
   const [search, setSearch] = useState("");
   const [categories, setCategories] = useState<string[]>([]);
   const [subCategories, setSubCategories] = useState<string[]>([]);
-  const [products, setProducts] = useState<any[]>([]);
+  const [products, setProducts] = useState<DocumentData[]>([]);
   const [selectedFilter, setSelectedFilter] = useState<{
     type: "category" | "subCategory";
     value: string;
   } | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const [filteredProducts, setFilteredProducts] = useState<any[]>([]);
+  const [filteredProducts, setFilteredProducts] = useState<DocumentData[]>([]);
 
   // Fetch all data once on load
   useEffect(() => {
@@ -257,7 +257,7 @@ export default function Home() {
         {search && searchedProducts.length > 0 && !selectedFilter && (
           <div className="mt-6">
             <h2 className="text-xl font-bold mb-4">
-              Products matching "{search}"
+              Products matching {search}
             </h2>
             <ul className="grid sm:grid-cols-2 gap-4">
               {searchedProducts.map((product, i) => (
@@ -288,7 +288,7 @@ export default function Home() {
           filteredCategories.length === 0 &&
           filteredSubCategories.length === 0 && (
             <div className="mt-6">
-              <p className="text-gray-500">No results found for "{search}"</p>
+              <p className="text-gray-500">No results found for {search}</p>
             </div>
           )}
 
