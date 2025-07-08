@@ -67,10 +67,10 @@ export default function CategoryCard({ category }: CategoryCardProps) {
 
   return (
     <div className="p-4 m-4 border rounded max-w-[350px]">
-      <h1 className="font-bold text-lg">{category}</h1>
+      <h1 className="font-bold text-md">{category}</h1>
       <button
         onClick={handleDeleteCategory}
-        className="mt-1 px-3 py-1 bg-red-600 text-white text-xs rounded"
+        className="mt-1 px-3 py-1 bg-red-200 hover:bg-red-500 text-white text-xs rounded"
       >
         Delete Category, Sub-categories & Products
       </button>

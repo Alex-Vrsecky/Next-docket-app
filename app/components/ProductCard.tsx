@@ -46,12 +46,12 @@ export default function ProductCard({
 
   return (
     <div className="p-4 m-4 border rounded max-w-[350px]">
-      <h1 className="font-bold text-lg">{name}</h1>
-      <p className="text-sm">Category: {category}</p>
-      <p className="text-sm">Sub-category: {subCategory}</p>
+      <h1 className="font-bold text-md">{name}</h1>
+      <p className="text-xs">Category: {category}</p>
+      <p className="text-xs">Sub-category: {subCategory}</p>
       <button
         onClick={handleDeleteProduct}
-        className="mt-2 px-3 py-1 bg-red-600 text-white rounded"
+        className="mt-2 px-2 py-1 text-xs font-bold bg-red-600 text-white rounded"
       >
         Delete Product
       </button>

@@ -64,11 +64,11 @@ export default function SubCategoryCard({
 
   return (
     <div className="p-4 m-4 border rounded max-w-[350px]">
-      <h1 className="font-bold text-lg">Sub-category: {subCategory}</h1>
-      <p className="text-sm text-gray-600">From category: {category}</p>
+      <h1 className="font-bold text-md">Sub-category: {subCategory}</h1>
+      <p className="text-xs text-gray-600">From category: {category}</p>
       <button
         onClick={handleDeleteSubCategory}
-        className="mt-2 px-3 py-1 bg-red-600 text-white rounded"
+        className="mt-2 px-2 py-1 text-xs font-bold bg-red-200 hover:bg-red-500 text-white rounded"
       >
         Remove Sub-category & Products
       </button>

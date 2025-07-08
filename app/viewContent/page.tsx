@@ -9,32 +9,34 @@ import Navigation from "../components/Navigation";
 import JsBarcode from "jsbarcode";
 import SubCategoryCard from "../components/SubCategoryCard";
 
+interface Category {
+  name: string;
+  subCategories: string[]; // optional if you store subcategories inside
+}
+
+type Categories = Category[];
+
 export default function ViewContent() {
-  const [categories, setCategories] = useState<DocumentData[]>([]);
-  const [subCategories, setSubCategories] = useState<DocumentData[]>([]);
+  const [categories, setCategories] = useState<Categories | []>([]);
   const [products, setProducts] = useState<DocumentData[]>([]);
 
   // Fetch Firestore content
   async function fetchContent() {
     try {
       const categoriesSnapshot = await getDocs(collection(db, "categories"));
-      const subCategoriesSnapshot = await getDocs(
-        collection(db, "sub-categories")
-      );
       const productsSnapshot = await getDocs(collection(db, "products"));
 
-      const categories = categoriesSnapshot.docs.map((doc) => doc.data());
-      const subCategories = subCategoriesSnapshot.docs.map((doc) => doc.data());
+      const categories: Categories = categoriesSnapshot.docs.map(
+        (doc) => doc.data() as Category
+      );
+
       const products = productsSnapshot.docs.map((doc) => ({
         ...doc.data(),
         id: doc.id, // useful if you want to use doc ID for barcode
       }));
 
       setCategories(categories);
-      setSubCategories(subCategories);
       setProducts(products);
-
-      console.log({ categories, subCategories, products });
     } catch (error) {
       console.error("Error fetching content:", error);
     }
@@ -64,35 +66,39 @@ export default function ViewContent() {
   }, [products]);
 
   return (
-    <div>
+    <div className="flex flex-col items-center justify-center p-4">
       <Navigation />
       <h1 className="text-2xl font-bold mb-4">Current Categories</h1>
-      <div className="flex">
+      <div className="flex flex-wrap max-w-[900px]">
         {categories.map((category, i) => (
           <CategoryCard key={i} category={category.name} />
         ))}
       </div>
 
       <h1 className="text-2xl font-bold mb-4">Current Subcategories</h1>
-      <div className="flex">
-        {subCategories.map((subCategory, i) => (
-          <SubCategoryCard
-            key={i}
-            category={subCategory.categories}
-            subCategory={subCategory.name}
-          />
-        ))}
+      <div className="flex flex-warp max-w-[900px]">
+        {categories.map((category) =>
+          category.subCategories.map((subCategory, j) => (
+            <SubCategoryCard
+              key={j}
+              category={category.name}
+              subCategory={subCategory}
+            />
+          ))
+        )}
       </div>
 
       <h1 className="text-2xl font-bold mb-4">Current Products</h1>
-      {products.map((product, i) => (
-        <ProductCard
-          key={i}
-          name={product.name}
-          category={product.category}
-          subCategory={product.subCategory}
-        />
-      ))}
+      <div className="flex flex-wrap max-w-[900px]">
+        {products.map((product, i) => (
+          <ProductCard
+            key={i}
+            name={product.name}
+            category={product.category}
+            subCategory={product.subCategory}
+          />
+        ))}
+      </div>
     </div>
   );
 }
