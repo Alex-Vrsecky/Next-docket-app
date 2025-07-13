@@ -9,16 +9,26 @@ import Navigation from "../components/Navigation";
 import JsBarcode from "jsbarcode";
 import SubCategoryCard from "../components/SubCategoryCard";
 
-interface Category {
-  name: string;
-  subCategories: string[]; // optional if you store subcategories inside
+interface ProductInterface {
+  Desc: string;
+  Extra: string;
+  LengthCoveragePackaging: string;
+  category: string;
+  id: string;
+  imageSrc: string;
+  priceWithNote: string;
+  productIN: string;
+  subCategory: string; // optional if you store subcategories inside
 }
 
-type Categories = Category[];
+interface CategoryInterface {
+  name?: string;
+  subCategories?: string[];
+}
 
 export default function ViewContent() {
-  const [categories, setCategories] = useState<Categories | []>([]);
-  const [products, setProducts] = useState<DocumentData[]>([]);
+  const [categories, setCategories] = useState<CategoryInterface[] | []>([]);
+  const [products, setProducts] = useState<ProductInterface[]>([]);
 
   // Fetch Firestore content
   async function fetchContent() {
@@ -26,14 +36,16 @@ export default function ViewContent() {
       const categoriesSnapshot = await getDocs(collection(db, "categories"));
       const productsSnapshot = await getDocs(collection(db, "products"));
 
-      const categories: Categories = categoriesSnapshot.docs.map(
-        (doc) => doc.data() as Category
+      const categories: CategoryInterface[] = categoriesSnapshot.docs.map(
+        (doc) => doc.data() as CategoryInterface
       );
 
-      const products = productsSnapshot.docs.map((doc) => ({
-        ...doc.data(),
-        id: doc.id, // useful if you want to use doc ID for barcode
+      const products: ProductInterface[] = productsSnapshot.docs.map((doc) => ({
+        ...(doc.data() as ProductInterface),
       }));
+
+      console.log("Fetched categories:", categories);
+      console.log("Fetched products:", products);
 
       setCategories(categories);
       setProducts(products);
@@ -71,21 +83,26 @@ export default function ViewContent() {
       <h1 className="text-2xl font-bold mb-4">Current Categories</h1>
       <div className="flex flex-wrap max-w-[900px]">
         {categories.map((category, i) => (
-          <CategoryCard key={i} category={category.name} />
+          <CategoryCard key={i} category={category.name!} />
         ))}
       </div>
 
       <h1 className="text-2xl font-bold mb-4">Current Subcategories</h1>
-      <div className="flex flex-warp max-w-[900px]">
-        {categories.map((category) =>
-          category.subCategories.map((subCategory, j) => (
-            <SubCategoryCard
-              key={j}
-              category={category.name}
-              subCategory={subCategory}
-            />
-          ))
-        )}
+      <div className="flex flex-wrap max-w-[900px]">
+        {categories.map((category, i) => (
+          <div key={i}>
+            <h2 className="text-xl font-bold">{category.name}</h2>
+            <div className="flex flex-wrap">
+              {category.subCategories?.map((subCategory, j) => (
+                <SubCategoryCard
+                  key={j}
+                  category={category.name!}
+                  subCategory={subCategory}
+                />
+              ))}
+            </div>
+          </div>
+        ))}
       </div>
 
       <h1 className="text-2xl font-bold mb-4">Current Products</h1>
@@ -96,6 +113,12 @@ export default function ViewContent() {
             name={product.name}
             category={product.category}
             subCategory={product.subCategory}
+            desc={product.desc}
+            extra={product.extra}
+            lengthCoveragePackaging={product.lengthCoveragePackaging}
+            imageSrc={product.imageSrc}
+            priceWithNote={product.priceWithNote}
+            productIN={product.productIN}
           />
         ))}
       </div>

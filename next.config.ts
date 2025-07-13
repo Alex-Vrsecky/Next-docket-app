@@ -1,7 +1,16 @@
 import type { NextConfig } from "next";
 
+/**** your existing config ****/
 const nextConfig: NextConfig = {
-  /* config options here */
+  // ...other config
+  images: {
+    domains: [
+      "media.bunnings.com.au",
+      "public.bowens.com.au",
+      "ubgeneralstore.com.au"
+      // add more domains as needed
+    ],
+  },
 };
 
 export default nextConfig;
