@@ -1,4 +1,3 @@
-// app/components/CategoryFilter.tsx
 "use client";
 
 import React, { useEffect, useState } from "react";
@@ -29,30 +28,54 @@ export default function CategoryFilter() {
   const [products, setProducts] = useState<ProductInterface[]>([]);
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
 
-  // selections
   const [selectedCategory, setSelectedCategory] = useState<string>("");
   const [availableSubcats, setAvailableSubcats] = useState<string[]>([]);
   const [selectedSubCategory, setSelectedSubCategory] = useState<string>("");
 
-  // fetch categories and products once
   useEffect(() => {
-    async function fetchData() {
-      const catSnap = await getDocs(collection(db, "categories"));
-      const cats = catSnap.docs.map((d) => ({
-        name: d.data().name as string,
-        subCategories: d.data().subCategories as string[],
-      }));
-      setCategories(cats);
-
+    async function fetchProducts() {
       const prodSnap = await getDocs(collection(db, "products"));
-      setProducts(
-        prodSnap.docs.map((d) => ({
-          id: d.id,
-          ...(d.data() as Omit<ProductInterface, "id">),
-        }))
+      const allProducts = prodSnap.docs.map((d) => ({
+        id: d.id,
+        ...(d.data() as Omit<ProductInterface, "id">),
+      }));
+
+      setProducts(allProducts);
+
+      const categoryMap: Record<string, Record<string, number>> = {};
+
+      for (const p of allProducts) {
+        if (!categoryMap[p.category]) {
+          categoryMap[p.category] = {};
+        }
+        if (p.subCategory) {
+          categoryMap[p.category][p.subCategory] =
+            (categoryMap[p.category][p.subCategory] || 0) + 1;
+        }
+      }
+
+      const MIN_PRODUCTS_PER_CATEGORY = 5;
+
+      const filteredCategoryArray: CategoryInterface[] = Object.entries(
+        categoryMap
+      )
+        .filter(([_, subcatCounts]) => {
+          const total = Object.values(subcatCounts).reduce((a, b) => a + b, 0);
+          return total >= MIN_PRODUCTS_PER_CATEGORY;
+        })
+        .map(([categoryName, subcatCounts]) => ({
+          name: categoryName,
+          subCategories: Object.entries(subcatCounts)
+            .sort((a, b) => b[1] - a[1])
+            .map(([subcat]) => subcat),
+        }));
+
+      setCategories(
+        filteredCategoryArray.sort((a, b) => a.name!.localeCompare(b.name!))
       );
     }
-    fetchData();
+
+    fetchProducts();
   }, []);
 
   useEffect(() => {
@@ -87,7 +110,15 @@ export default function CategoryFilter() {
       />
       <div className="grid grid-cols-2 gap-4 max-w-md">
         {filtered.length > 0 ? (
-          filtered.map((p) => <ProductCard key={p.id} p={p} />)
+          filtered.map((p) => (
+            <ProductCard
+              key={p.id}
+              p={p}
+              onDelete={(id) =>
+                setProducts((prev) => prev.filter((item) => item.id !== id))
+              }
+            />
+          ))
         ) : (
           <p className="text-gray-500">No products match.</p>
         )}
