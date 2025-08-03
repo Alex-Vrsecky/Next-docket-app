@@ -26,6 +26,7 @@ interface ProductInterface {
   subCategory: string;
   Length: string;
 }
+// add
 
 export default function ViewContent() {
   const [products, setProducts] = useState<ProductInterface[]>([]);
