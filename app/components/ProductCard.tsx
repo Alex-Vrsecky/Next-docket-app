@@ -1,7 +1,7 @@
 // app/components/ProductCard.tsx
 "use client";
-import { doc, deleteDoc } from "firebase/firestore";
-import { db } from "../firebase/firebaseInit";
+// import { doc, deleteDoc } from "firebase/firestore";
+// import { db } from "../firebase/firebaseInit";
 
 import Image from "next/image";
 import {
@@ -17,7 +17,7 @@ import {
   DropdownTrigger,
 } from "@heroui/react";
 import Barcode from "react-barcode";
-import ConfirmDialog from "./ConfirmDialog";
+// import ConfirmDialog from "./ConfirmDialog";
 
 interface ProductInterface {
   Desc: string;
@@ -34,23 +34,23 @@ interface ProductInterface {
 
 export default function ProductCard({
   p,
-  onDelete,
-}: {
+}: // onDelete,
+{
   p: ProductInterface;
   onDelete: (id: string) => void;
 }) {
-  const handleDelete = async () => {
-    const confirmed = confirm(`Delete product "${p.productIN}"?`);
-    if (!confirmed) return;
+  // const handleDelete = async () => {
+  //   const confirmed = confirm(`Delete product "${p.productIN}"?`);
+  //   if (!confirmed) return;
 
-    try {
-      await deleteDoc(doc(db, "products", p.id));
-      onDelete(p.id); // notify parent to update state
-    } catch (err) {
-      console.error("Failed to delete product:", err);
-      alert("Failed to delete. Check console.");
-    }
-  };
+  //   try {
+  //     await deleteDoc(doc(db, "products", p.id));
+  //     onDelete(p.id); // notify parent to update state
+  //   } catch (err) {
+  //     console.error("Failed to delete product:", err);
+  //     alert("Failed to delete. Check console.");
+  //   }
+  // };
 
   return (
     <div className="relative shadow-lg rounded-2xl overflow-hidden max-w-[350px]">
@@ -102,7 +102,7 @@ export default function ProductCard({
                   <p>{p.priceWithNote}</p>
                 </span>
               </DropdownItem>
-              <DropdownItem key="delete" className="pt-5">
+              {/* <DropdownItem key="delete" className="pt-5">
                 <ConfirmDialog
                   title="Delete Product"
                   message={`Are you sure you want to delete "${p.productIN}"?`}
@@ -113,7 +113,7 @@ export default function ProductCard({
                     </div>
                   }
                 />
-              </DropdownItem>
+              </DropdownItem> */}
             </DropdownMenu>
           </Dropdown>
         </CardBody>

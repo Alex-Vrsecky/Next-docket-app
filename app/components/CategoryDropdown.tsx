@@ -14,7 +14,6 @@ interface CategoryDropdownProps {
   onCategoryChange: (category: string) => void;
   onSubCategoryChange: (sub: string) => void;
   onLengthChange: (length: string) => void; // Change to handle single selection
-  sortOrder: "asc" | "desc";
   availableLengths: string[];
 }
 
@@ -27,13 +26,10 @@ export default function CategoryDropdown({
   onCategoryChange,
   onSubCategoryChange,
   onLengthChange,
-  sortOrder,
   availableLengths,
 }: CategoryDropdownProps) {
   const sortedCategories = [...categories].sort((a, b) =>
-    sortOrder === "asc"
-      ? (a.name || "").localeCompare(b.name || "")
-      : (b.name || "").localeCompare(a.name || "")
+    (a.name || "").localeCompare(b.name || "")
   );
 
   const handleLengthChange = (length: string) => {
@@ -54,7 +50,7 @@ export default function CategoryDropdown({
         <div className="flex flex-wrap gap-2 sm:gap-4 w-full">
           <button
             onClick={() => onCategoryChange("")}
-            className={`px-2 py-1 text-xs sm:text-sm rounded-md whitespace-normal border ${
+            className={`px-2 py-1 text-md sm:text-[20px] rounded-md whitespace-normal border ${
               selectedCategory === ""
                 ? "bg-blue-600 text-white"
                 : "bg-white text-gray-800"
@@ -66,7 +62,7 @@ export default function CategoryDropdown({
             <button
               key={c.name}
               onClick={() => onCategoryChange(c.name!)}
-              className={`px-2 py-1 text-xs sm:text-sm rounded-md whitespace-normal border ${
+              className={`px-2 py-1 text-md sm:text-[20px] rounded-md whitespace-normal border ${
                 selectedCategory === c.name
                   ? "bg-green-900 text-white"
                   : "bg-white text-gray-800"
@@ -86,7 +82,7 @@ export default function CategoryDropdown({
           <button
             onClick={() => onSubCategoryChange("")}
             disabled={!availableSubcats.length}
-            className={`px-2 py-1 text-xs sm:text-sm rounded-md whitespace-normal border ${
+            className={`px-2 py-1 text-md sm:text-[20px] rounded-md whitespace-normal border ${
               selectedSubCategory === ""
                 ? "bg-green-700 text-white"
                 : "bg-white text-gray-800"
@@ -101,7 +97,7 @@ export default function CategoryDropdown({
             <button
               key={sub}
               onClick={() => onSubCategoryChange(sub)}
-              className={`px-2 py-1 text-xs sm:text-sm rounded-md whitespace-normal border ${
+              className={`px-2 py-1 text-md sm:text-[20px] rounded-md whitespace-normal border ${
                 selectedSubCategory === sub
                   ? "bg-green-900 text-white"
                   : "bg-white text-gray-800"
@@ -121,7 +117,7 @@ export default function CategoryDropdown({
           <button
             onClick={() => onLengthChange("")}
             disabled={!availableLengths.length}
-            className={`px-2 py-1 text-xs sm:text-sm rounded-md whitespace-normal border ${
+            className={`px-2 py-1 text-md sm:text-[20px] rounded-md whitespace-normal border ${
               selectedLength === ""
                 ? "bg-yellow-600 text-white"
                 : "bg-white text-gray-800"
@@ -138,7 +134,7 @@ export default function CategoryDropdown({
               <button
                 key={length}
                 onClick={() => handleLengthChange(length)}
-                className={`px-2 py-1 text-xs sm:text-sm rounded-md whitespace-normal border ${
+                className={`px-2 py-1 text-md sm:text-[20px] rounded-md whitespace-normal border ${
                   selectedLength === length
                     ? "bg-yellow-900 text-white"
                     : "bg-white text-gray-800"

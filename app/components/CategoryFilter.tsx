@@ -3,7 +3,6 @@
 import React, { useEffect, useState } from "react";
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "../firebase/firebaseInit";
-import CategorySort from "./CategorySort";
 import CategoryDropdown from "./CategoryDropdown";
 import ProductCard from "./ProductCard";
 
@@ -29,7 +28,6 @@ interface CategoryInterface {
 export default function CategoryFilter() {
   const [categories, setCategories] = useState<CategoryInterface[]>([]);
   const [products, setProducts] = useState<ProductInterface[]>([]);
-  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
   const [selectedCategory, setSelectedCategory] = useState<string>("");
   const [availableSubcats, setAvailableSubcats] = useState<string[]>([]);
   const [selectedSubCategory, setSelectedSubCategory] = useState<string>("");
@@ -126,18 +124,18 @@ export default function CategoryFilter() {
   }, [selectedCategory, selectedSubCategory, products, selectedLength.length]);
 
   // Apply filters: category, subcategory, and length
+  // Apply filters: category, subcategory, and length
   const filtered = products.filter((p) => {
     if (selectedCategory && p.category !== selectedCategory) return false;
     if (selectedSubCategory && p.subCategory !== selectedSubCategory)
       return false;
-    if (selectedLength.length > 0 && !selectedLength.includes(p.Length))
-      return false;
+    // only show when it matches exactly (or when "All Lengths" aka empty string)
+    if (selectedLength && p.Length !== selectedLength) return false;
     return true;
   });
 
   return (
     <div className="space-y-4 ">
-      <CategorySort sortOrder={sortOrder} onChange={setSortOrder} />
       <CategoryDropdown
         categories={categories}
         availableSubcats={availableSubcats}
@@ -147,7 +145,6 @@ export default function CategoryFilter() {
         onCategoryChange={setSelectedCategory}
         onSubCategoryChange={setSelectedSubCategory}
         onLengthChange={setSelectedLength}
-        sortOrder={sortOrder}
         availableLengths={availableLengths}
       />
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4 mx-auto">
