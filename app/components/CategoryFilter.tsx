@@ -9,15 +9,14 @@ import ProductCard from "./ProductCard";
 
 interface ProductInterface {
   Desc: string;
-  Extra: string;
-  LengthCoveragePackaging: string;
+  Length: string;
   category: string;
-  id: string;
   imageSrc: string;
   priceWithNote: string;
   productIN: string;
   subCategory: string;
 }
+
 interface CategoryInterface {
   name?: string;
   subCategories?: string[];
@@ -27,10 +26,11 @@ export default function CategoryFilter() {
   const [categories, setCategories] = useState<CategoryInterface[]>([]);
   const [products, setProducts] = useState<ProductInterface[]>([]);
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
-
   const [selectedCategory, setSelectedCategory] = useState<string>("");
   const [availableSubcats, setAvailableSubcats] = useState<string[]>([]);
   const [selectedSubCategory, setSelectedSubCategory] = useState<string>("");
+  const [selectedLength, setSelectedLength] = useState<string[]>([]); // Change to array to handle multiple lengths
+  const [availableLengths, setAvailableLengths] = useState<string[]>([]);
 
   useEffect(() => {
     async function fetchProducts() {
@@ -42,6 +42,7 @@ export default function CategoryFilter() {
 
       setProducts(allProducts);
 
+      // Set up categories with their subcategories
       const categoryMap: Record<string, Record<string, number>> = {};
 
       for (const p of allProducts) {
@@ -54,25 +55,26 @@ export default function CategoryFilter() {
         }
       }
 
-      const MIN_PRODUCTS_PER_CATEGORY = 5;
+      const MIN_PRODUCTS_PER_CATEGORY = 1;
 
       const filteredCategoryArray: CategoryInterface[] = Object.entries(
         categoryMap
       )
-        .filter(([_, subcatCounts]) => {
+        .map(([categoryName, subcatCounts]) => {
           const total = Object.values(subcatCounts).reduce((a, b) => a + b, 0);
-          return total >= MIN_PRODUCTS_PER_CATEGORY;
+          return {
+            name: categoryName,
+            subCategories: Object.entries(subcatCounts)
+              .sort((a, b) => b[1] - a[1])
+              .map(([subcat]) => subcat),
+            total,
+          };
         })
-        .map(([categoryName, subcatCounts]) => ({
-          name: categoryName,
-          subCategories: Object.entries(subcatCounts)
-            .sort((a, b) => b[1] - a[1])
-            .map(([subcat]) => subcat),
-        }));
+        .filter((c) => c.total >= MIN_PRODUCTS_PER_CATEGORY)
+        .sort((a, b) => b.total - a.total); // Sort by popularity
 
-      setCategories(
-        filteredCategoryArray.sort((a, b) => a.name!.localeCompare(b.name!))
-      );
+      // Remove `.total` before setting state
+      setCategories(filteredCategoryArray.map(({ total, ...rest }) => rest));
     }
 
     fetchProducts();
@@ -84,31 +86,73 @@ export default function CategoryFilter() {
       setSelectedSubCategory("");
       return;
     }
+
     const cat = categories.find((c) => c.name === selectedCategory);
-    setAvailableSubcats(cat?.subCategories ?? []);
-    setSelectedSubCategory("");
+    const subcats = cat?.subCategories ?? [];
+
+    setAvailableSubcats(subcats);
+
+    // Auto-select if there's only one
+    if (subcats.length === 1) {
+      setSelectedSubCategory(subcats[0]);
+    } else {
+      setSelectedSubCategory("");
+    }
   }, [selectedCategory, categories]);
 
+  // Whenever the category or subcategory changes, filter products and derive available lengths
+  useEffect(() => {
+    if (selectedCategory && selectedSubCategory) {
+      // Filter products based on selected category and subcategory
+      const filteredProducts = products.filter(
+        (p) =>
+          p.category === selectedCategory &&
+          p.subCategory === selectedSubCategory
+      );
+
+      // Get unique lengths from the filtered products
+      const uniqueLengths = Array.from(
+        new Set(filteredProducts.map((p) => p.Length))
+      );
+      setAvailableLengths(uniqueLengths);
+
+      // Auto-select all lengths if no specific length is selected
+      if (selectedLength.length === 0) {
+        setSelectedLength(uniqueLengths); // Auto-select all lengths
+      }
+    } else {
+      // Reset available lengths if no category or subcategory is selected
+      setAvailableLengths([]);
+      setSelectedLength([]); // Reset selected length
+    }
+  }, [selectedCategory, selectedSubCategory, products]);
+
+  // Apply filters: category, subcategory, and length
   const filtered = products.filter((p) => {
     if (selectedCategory && p.category !== selectedCategory) return false;
     if (selectedSubCategory && p.subCategory !== selectedSubCategory)
+      return false;
+    if (selectedLength.length > 0 && !selectedLength.includes(p.Length))
       return false;
     return true;
   });
 
   return (
-    <div className="space-y-4 p-4">
+    <div className="space-y-4 ">
       <CategorySort sortOrder={sortOrder} onChange={setSortOrder} />
       <CategoryDropdown
         categories={categories}
         availableSubcats={availableSubcats}
         selectedCategory={selectedCategory}
         selectedSubCategory={selectedSubCategory}
+        selectedLength={selectedLength}
         onCategoryChange={setSelectedCategory}
         onSubCategoryChange={setSelectedSubCategory}
+        onLengthChange={setSelectedLength} // Added length change handler
         sortOrder={sortOrder}
+        availableLengths={availableLengths} // Passed available lengths to dropdown
       />
-      <div className="grid grid-cols-2 gap-4 max-w-md">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4 mx-auto">
         {filtered.length > 0 ? (
           filtered.map((p) => (
             <ProductCard
@@ -120,7 +164,7 @@ export default function CategoryFilter() {
             />
           ))
         ) : (
-          <p className="text-gray-500">No products match.</p>
+          <p className="text-gray-500">No products match your filters.</p>
         )}
       </div>
     </div>
