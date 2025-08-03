@@ -1,6 +1,4 @@
 import React from "react";
-import AddCategory from "./AddCategory";
-import AddSubCategory from "./AddSubCategory";
 import AddProduct from "./AddProduct";
 import Navigation from "../components/Navigation";
 
@@ -10,8 +8,6 @@ export default function AddNewContent() {
       <Navigation />
       <h1>Add New Content</h1>
       <div className="flex flex-col gap-6">
-        <AddCategory />
-        <AddSubCategory />
         <AddProduct />
         {/* <Button>Add All</Button> */}
       </div>

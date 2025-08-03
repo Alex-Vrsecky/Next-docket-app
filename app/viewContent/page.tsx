@@ -1,13 +1,18 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { getDocs, collection } from "firebase/firestore";
+import {
+  getDocs,
+  collection,
+  query,
+  where,
+  deleteDoc,
+  doc,
+} from "firebase/firestore";
 import { db } from "../firebase/firebaseInit";
 import ProductCard from "../components/ProductCard";
-import CategoryCard from "../components/CategoryCard";
 import Navigation from "../components/Navigation";
 import JsBarcode from "jsbarcode";
-import SubCategoryCard from "../components/SubCategoryCard";
 
 interface ProductInterface {
   Desc: string;
@@ -22,87 +27,70 @@ interface ProductInterface {
   Length: string;
 }
 
-interface CategoryInterface {
-  name?: string;
-  subCategories?: string[];
-}
-
 export default function ViewContent() {
-  const [categories, setCategories] = useState<CategoryInterface[]>([]);
   const [products, setProducts] = useState<ProductInterface[]>([]);
 
-  // Fetch Firestore content
-  async function fetchContent() {
+  // Fetch only products
+  async function fetchProducts() {
     try {
-      const categoriesSnapshot = await getDocs(collection(db, "categories"));
-      const productsSnapshot = await getDocs(collection(db, "products"));
-
-      const categoriesData: CategoryInterface[] = categoriesSnapshot.docs.map(
-        (doc) => doc.data() as CategoryInterface
-      );
-
-      const productsData: ProductInterface[] = productsSnapshot.docs.map(
-        (doc) => ({
-          ...(doc.data() as ProductInterface),
-        })
-      );
-
-      setCategories(categoriesData);
-      setProducts(productsData);
-    } catch (error) {
-      console.error("Error fetching content:", error);
+      const snapshot = await getDocs(collection(db, "products"));
+      const data = snapshot.docs.map((docSnap) => ({
+        ...(docSnap.data() as ProductInterface),
+        id: docSnap.id,
+      }));
+      setProducts(data);
+    } catch (err) {
+      console.error("Error fetching products:", err);
     }
   }
 
   useEffect(() => {
-    fetchContent();
+    fetchProducts();
   }, []);
 
-  // Generate barcodes after products are loaded
+  // Generate barcodes in each <svg id="barcode-INDEX" />
   useEffect(() => {
-    products.forEach((product, index) => {
-      const barcodeId = `barcode-${index}`;
+    products.forEach((prod, idx) => {
       try {
-        JsBarcode(`#${barcodeId}`, product.productIN, {
+        JsBarcode(`#barcode-${idx}`, prod.productIN, {
           format: "CODE128",
           displayValue: true,
           fontSize: 14,
           height: 40,
         });
       } catch (err) {
-        console.warn("Failed to generate barcode:", err);
+        console.warn("Barcode failed for", prod.productIN, err);
       }
     });
   }, [products]);
 
+  // Delete by productIN
+  const deleteProductByIN = async (productIN: string) => {
+    try {
+      const q = query(
+        collection(db, "products"),
+        where("productIN", "==", productIN)
+      );
+      const snapshot = await getDocs(q);
+
+      // delete all matching docs
+      await Promise.all(
+        snapshot.docs.map((snap) => deleteDoc(doc(db, "products", snap.id)))
+      );
+
+      // update local state
+      setProducts((prev) => prev.filter((p) => p.productIN !== productIN));
+
+      alert(`Deleted all products with IN ${productIN}.`);
+    } catch (err) {
+      console.error("Error deleting products:", err);
+      alert("Failed to delete product(s).");
+    }
+  };
+
   return (
-    <div className="flex flex-col items-center justify-center p-4">
+    <div className="flex flex-col items-center p-4">
       <Navigation />
-
-      <h1 className="text-2xl font-bold mb-4">Current Categories</h1>
-      <div className="flex flex-wrap max-w-[900px]">
-        {categories.map((category, i) => (
-          <CategoryCard key={i} category={category.name!} />
-        ))}
-      </div>
-
-      <h1 className="text-2xl font-bold mb-4">Current Subcategories</h1>
-      <div className="flex flex-wrap max-w-[900px]">
-        {categories.map((category, i) => (
-          <div key={i} className="mr-6 mb-4">
-            <h2 className="text-xl font-bold">{category.name}</h2>
-            <div className="flex flex-wrap">
-              {category.subCategories?.map((subCategory, j) => (
-                <SubCategoryCard
-                  key={j}
-                  category={category.name!}
-                  subCategory={subCategory}
-                />
-              ))}
-            </div>
-          </div>
-        ))}
-      </div>
 
       <h1 className="text-2xl font-bold mb-4">Current Products</h1>
       <div className="flex flex-wrap max-w-[900px]">
@@ -110,9 +98,7 @@ export default function ViewContent() {
           <ProductCard
             key={product.id}
             p={product}
-            onDelete={(id: string) =>
-              setProducts((prev) => prev.filter((prod) => prod.id !== id))
-            }
+            onDelete={() => deleteProductByIN(product.productIN)}
           />
         ))}
       </div>
