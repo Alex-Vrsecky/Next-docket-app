@@ -29,6 +29,7 @@ interface ProductInterface {
   priceWithNote: string;
   productIN: string;
   subCategory: string;
+  Length: string;
 }
 
 export default function ProductCard({

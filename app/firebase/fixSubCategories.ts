@@ -1,4 +1,4 @@
-const admin = require("firebase-admin");
+import admin from "firebase-admin";
 
 // INIT: Replace with your service account path if not running on Firebase Hosting
 admin.initializeApp({
@@ -10,7 +10,7 @@ async function fixSubCategories() {
   const catsRef = db.collection("categories");
   const snap = await catsRef.get();
   for (const doc of snap.docs) {
-    let { subCategories } = doc.data();
+    const { subCategories } = doc.data();
     if (typeof subCategories === "string") {
       try {
         const parsed = JSON.parse(subCategories);
@@ -18,8 +18,8 @@ async function fixSubCategories() {
           await doc.ref.update({ subCategories: parsed });
           console.log(`Fixed: ${doc.id}:`, parsed);
         }
-      } catch (e: any) {
-        console.error(`Skipping ${doc.id}: couldn't parse`, e.message);
+      } catch (e) {
+        console.error(`Skipping ${doc.id}: couldn't parse`, (e as Error).message);
       }
     }
   }
