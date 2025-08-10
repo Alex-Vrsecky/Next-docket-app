@@ -36,6 +36,3 @@ function Footer() {
     </footer>
   );
 }
-
-// /* <p>Built and managed by Alex Vrsecky</p>
-// <p></p>

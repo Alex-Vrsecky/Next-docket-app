@@ -1,12 +1,15 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   collection,
   addDoc,
   getDocs,
   updateDoc,
   doc,
+  setDoc,
+  arrayUnion,
+  getDoc,
 } from "firebase/firestore";
 import { Button } from "@heroui/react";
 import { db } from "../firebase/firebaseInit";
@@ -25,6 +28,35 @@ export default function AddProduct() {
   const [newSubCategory, setNewSubCategory] = useState(""); // For new subcategory input
   const [error, setError] = useState("");
 
+  // Track if we prefilled from a draft so we don't auto-select defaults that overwrite it
+  const prefilledRef = useRef(false);
+
+  // Prefill from sessionStorage (when coming from Edit page "Add Product")
+  useEffect(() => {
+    try {
+      const raw =
+        typeof window !== "undefined"
+          ? sessionStorage.getItem("productDraft")
+          : null;
+      if (raw) {
+        const d = JSON.parse(raw);
+        setDesc(d.Desc || "");
+        setLength(d.Length || "");
+        setCategory(d.category || "");
+        setSubCategory(d.subCategory || "");
+        setImageSrc(d.imageSrc || "");
+        setPriceWithNote(d.priceWithNote || "");
+        setProductIN(d.productIN || "");
+        prefilledRef.current = true;
+        // Keep the draft so fields persist even if the user navigates away and back
+        // If you prefer to clear it after hydration, uncomment the next line:
+        // sessionStorage.removeItem("productDraft");
+      }
+    } catch (e) {
+      console.warn("Failed to parse productDraft from sessionStorage");
+    }
+  }, []);
+
   // Fetch all categories from the products collection on load
   useEffect(() => {
     async function fetchCategories() {
@@ -40,94 +72,126 @@ export default function AddProduct() {
       );
 
       setCategories(uniqueCats);
-      if (uniqueCats.length) setCategory(uniqueCats[0]);
+      // Only auto-select if we didn't prefill a category
+      if (uniqueCats.length && !prefilledRef.current && !category)
+        setCategory(uniqueCats[0]);
     }
     fetchCategories();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Fetch subcategories for selected category from products collection
   useEffect(() => {
     async function fetchSubCategories() {
-      if (!category) return;
+      if (!category) {
+        setSubCategories([]);
+        return;
+      }
 
+      // A) From products (back-compat)
       const snapshot = await getDocs(collection(db, "products"));
-      const subCategoriesList: string[] = [];
-
-      snapshot.docs.forEach((doc) => {
-        const data = doc.data();
+      const fromProducts: string[] = [];
+      snapshot.docs.forEach((docSnap) => {
+        const data = docSnap.data() as any;
         if (data.category === category && data.subCategory) {
-          subCategoriesList.push(data.subCategory);
+          fromProducts.push(String(data.subCategory));
         }
       });
 
-      // Deduplicate and sort subcategories
-      const uniqueSubs = Array.from(new Set(subCategoriesList)).sort((a, b) =>
+      // B) From metadata
+      const key = slug(category);
+      const metaSnap = await getDoc(doc(db, "category_meta", key));
+      const fromMeta: string[] = metaSnap.exists()
+        ? metaSnap.data()?.subcategories ?? []
+        : [];
+
+      // Combine (case-insensitive unique) + sort alpha
+      const combined = uniqCI([...fromProducts, ...fromMeta]).sort((a, b) =>
         a.localeCompare(b)
       );
 
-      setSubCategories(uniqueSubs);
-      setSubCategory(uniqueSubs[0] || ""); // Auto-select the first subcategory if available
+      setSubCategories(combined);
+      // Only set a default if user/draft hasn't already chosen one
+      setSubCategory((prev) => prev || combined[0] || "");
     }
     fetchSubCategories();
   }, [category]);
 
   // Add new category to Firestore (products collection)
   const addNewCategory = async () => {
-    if (!newCategory) {
+    if (!newCategory.trim()) {
       setError("Please enter a category name.");
       return;
     }
     try {
-      // Add the new category to the products collection (just as an example, using addDoc)
-      await addDoc(collection(db, "products"), {
-        category: newCategory,
-        subCategory: "", // New category will have no subcategory initially
-        Desc: "",
-        Length: "",
-        imageSrc: "",
-        priceWithNote: "",
-        productIN: "",
-      });
+      const key = slug(newCategory);
+      const metaRef = doc(db, "category_meta", key);
 
-      setCategories((prev) => [...prev, newCategory]);
-      setCategory(newCategory); // Auto-select the new category
-      setNewCategory(""); // Clear the input field
-      setError(""); // Clear any errors
-      alert("Category added!");
+      await setDoc(
+        metaRef,
+        { name: newCategory.trim(), subcategories: [] },
+        { merge: true }
+      );
+
+      setCategories((prev) =>
+        uniqCI([...prev, newCategory]).sort((a, b) => a.localeCompare(b))
+      );
+      setCategory(newCategory.trim());
+      setNewCategory("");
+      setError("");
+      // toast.success("Category added!");
     } catch (e) {
       console.error("Error adding category: ", e);
       setError("Failed to add category.");
     }
   };
 
+  const slug = (s: string) =>
+    (s || "")
+      .toLowerCase()
+      .trim()
+      .replace(/\s+/g, "-")
+      .replace(/[^a-z0-9-_]/g, "");
+
+  const uniqCI = (arr: string[]) => {
+    const map = new Map<string, string>();
+    arr.forEach((v) => {
+      const k = (v || "").trim().toLowerCase();
+      if (k) map.set(k, v.trim());
+    });
+    return Array.from(map.values());
+  };
+
   // Add new subcategory to Firestore (for selected category)
   const addNewSubCategory = async () => {
-    if (!newSubCategory || !category) {
+    const sub = newSubCategory.trim();
+    if (!sub || !category) {
       setError("Please select a category and enter a subcategory name.");
       return;
     }
     try {
-      // Update the products where the category matches to add the new subcategory
-      const snapshot = await getDocs(collection(db, "products"));
-      const productsToUpdate = snapshot.docs.filter((doc) => {
-        const data = doc.data();
-        return data.category === category;
+      const key = slug(category);
+      const metaRef = doc(db, "category_meta", key);
+
+      // Ensure category doc exists
+      await setDoc(
+        metaRef,
+        { name: category, subcategories: [] },
+        { merge: true }
+      );
+
+      // Add subcategory (unique server-side)
+      await updateDoc(metaRef, {
+        subcategories: arrayUnion(sub),
       });
 
-      // Update subcategories for each product in the selected category
-      for (const productDoc of productsToUpdate) {
-        const productRef = doc(db, "products", productDoc.id);
-        await updateDoc(productRef, {
-          subCategory: newSubCategory,
-        });
-      }
-
-      // Update local state to reflect the new subcategory
-      setSubCategories((prev) => [...prev, newSubCategory]);
-      setSubCategory(newSubCategory); // Auto-select the new subcategory
-      setNewSubCategory(""); // Clear the input field
-      setError(""); // Clear any errors
-      alert("Subcategory added!");
+      // Reflect in UI (unique client-side)
+      setSubCategories((prev) =>
+        uniqCI([...prev, sub]).sort((a, b) => a.localeCompare(b))
+      );
+      setSubCategory(sub);
+      setNewSubCategory("");
+      setError("");
+      // toast.success("Subcategory added!");
     } catch (e) {
       console.error("Error adding subcategory: ", e);
       setError("Failed to add subcategory.");
@@ -136,13 +200,13 @@ export default function AddProduct() {
 
   // Add product to Firestore
   async function firebaseAddProduct() {
-    // basic validation
     if (!Desc || !Length || !category || !productIN) {
       setError("Please fill in all required fields.");
       return;
     }
 
     try {
+      // Add the product
       await addDoc(collection(db, "products"), {
         Desc,
         Length,
@@ -152,14 +216,35 @@ export default function AddProduct() {
         priceWithNote,
         productIN,
       });
-      // clear form
-      setDesc("");
-      setLength("");
-      setImageSrc("");
-      setPriceWithNote("");
-      setProductIN("");
-      setError("");
-      alert("Product added!");
+
+      // Ensure meta knows about this subCategory
+      if (subCategory?.trim()) {
+        const key = slug(category);
+        await setDoc(
+          doc(db, "category_meta", key),
+          { name: category, subcategories: [] },
+          { merge: true }
+        );
+        await updateDoc(doc(db, "category_meta", key), {
+          subcategories: arrayUnion(subCategory.trim()),
+        });
+      }
+
+      // (Keep form data as you already do)
+      sessionStorage.setItem(
+        "productDraft",
+        JSON.stringify({
+          Desc,
+          Length,
+          category,
+          subCategory,
+          imageSrc,
+          priceWithNote,
+          productIN,
+        })
+      );
+
+      // toast.success("Product added!");
     } catch (e) {
       console.error("Error adding product: ", e);
       setError("Failed to add product. See console for details.");
@@ -212,8 +297,8 @@ export default function AddProduct() {
             className="border rounded p-2"
             required
           >
-            {categories.map((c) => (
-              <option key={c} value={c}>
+            {categories.map((c, i) => (
+              <option key={i + c} value={c}>
                 {c}
               </option>
             ))}

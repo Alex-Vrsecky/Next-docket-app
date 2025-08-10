@@ -33,9 +33,11 @@ interface ProductInterface {
 export default function ProductCard({
   p,
   onDelete,
+  onEdit,
 }: {
   p: ProductInterface;
   onDelete: (id: string) => void;
+  onEdit?: (id: string) => void;
 }) {
   const pathname = usePathname();
 
@@ -43,13 +45,14 @@ export default function ProductCard({
     <div className="relative shadow-lg rounded-2xl overflow-hidden max-w-[350px]">
       <Card className="max-w-[400px]">
         <CardHeader className="flex items-start gap-4 p-4">
-          <Image
-            alt="product image"
-            height={60}
-            width={60}
-            src={p.imageSrc!}
-            className="rounded-md object-cover"
-          />
+          {p.imageSrc && (
+            <Image
+              alt="product image"
+              height={60}
+              width={60}
+              src={p.imageSrc}
+            />
+          )}
           <div className="flex flex-col gap-1">
             <p className="text-sm text-gray-500">IN: {p.productIN}</p>
             <p className="text-base font-semibold text-black">{p.Desc}</p>
@@ -59,9 +62,7 @@ export default function ProductCard({
             </div>
           </div>
         </CardHeader>
-
         <Divider />
-
         <CardBody className="flex flex-wrap flex-row justify-center text-sm m-2">
           <Dropdown className="flex justify-center">
             <DropdownTrigger>
@@ -91,7 +92,6 @@ export default function ProductCard({
                 </span>
               </DropdownItem>
 
-              {/* always-render, but hide/unhide via CSS */}
               <DropdownItem
                 key="delete"
                 className={`pt-5 transition-opacity ${
@@ -102,15 +102,28 @@ export default function ProductCard({
                 onClick={() => {
                   if (
                     pathname === "/viewContent" &&
-                    confirm(`Delete product "${p.productIN}"?`)
+                    confirm(`Delete product "${p.productIN} ${p.category}"?`)
                   ) {
-                    onDelete(p.id);
+                    onDelete(p.productIN);
                   }
                 }}
               >
-                <div className="text-xs text-red-500 bg-red-100 rounded-xl text-center py-1">
-                  Delete Product
-                </div>
+                Delete Product
+              </DropdownItem>
+              <DropdownItem
+                key="edit"
+                className={`pt-5 transition-opacity ${
+                  pathname === "/viewContent"
+                    ? "opacity-100"
+                    : "opacity-0 pointer-events-none"
+                }`}
+                onClick={() => {
+                  if (pathname === "/viewContent") {
+                    onEdit?.(p.id);
+                  }
+                }}
+              >
+                Edit Product
               </DropdownItem>
             </DropdownMenu>
           </Dropdown>

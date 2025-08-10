@@ -1,10 +1,10 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   getDocs,
   collection,
-  query,
+  query as fsQuery,
   where,
   deleteDoc,
   doc,
@@ -26,10 +26,10 @@ interface ProductInterface {
   subCategory: string;
   Length: string;
 }
-// add
 
 export default function ViewContent() {
   const [products, setProducts] = useState<ProductInterface[]>([]);
+  const [search, setSearch] = useState("");
 
   // Fetch only products
   async function fetchProducts() {
@@ -49,28 +49,40 @@ export default function ViewContent() {
     fetchProducts();
   }, []);
 
-  // Generate barcodes in each <svg id="barcode-INDEX" />
+  // Derived: filtered products by Desc (case-insensitive)
+  const filteredProducts = useMemo(() => {
+    const term = search.trim().toLowerCase();
+    if (!term) return products;
+    return products.filter((p) => (p.Desc || "").toLowerCase().includes(term));
+  }, [products, search]);
+
+  // Generate barcodes only for currently rendered items
   useEffect(() => {
-    products.forEach((prod, idx) => {
+    filteredProducts.forEach((prod, idx) => {
       try {
-        JsBarcode(`#barcode-${idx}`, prod.productIN, {
-          format: "CODE128",
-          displayValue: true,
-          fontSize: 14,
-          height: 40,
-        });
+        const el = document.querySelector(
+          `#barcode-${idx}`
+        ) as SVGElement | null;
+        if (el) {
+          JsBarcode(el, prod.productIN, {
+            format: "CODE128",
+            displayValue: true,
+            fontSize: 14,
+            height: 40,
+          });
+        }
       } catch (err) {
         console.warn("Barcode failed for", prod.productIN, err);
       }
     });
-  }, [products]);
+  }, [filteredProducts]);
 
   // Delete by productIN
   const deleteProductByIN = async (productIN: string) => {
     try {
-      const q = query(
+      const q = fsQuery(
         collection(db, "products"),
-        where("productIN", "==", productIN)
+        where("id", "==", productIN)
       );
       const snapshot = await getDocs(q);
 
@@ -82,11 +94,16 @@ export default function ViewContent() {
       // update local state
       setProducts((prev) => prev.filter((p) => p.productIN !== productIN));
 
-      alert(`Deleted all products with IN ${productIN}.`);
+      alert(`Deleted all products with ID ${productIN}.`);
     } catch (err) {
       console.error("Error deleting products:", err);
       alert("Failed to delete product(s).");
     }
+  };
+
+  const editProductByID = async (productIN: string) => {
+    // redirect to edit page
+    window.location.href = `/products/${productIN}/edit`;
   };
 
   return (
@@ -94,15 +111,44 @@ export default function ViewContent() {
       <Navigation />
 
       <h1 className="text-2xl font-bold mb-4">Current Products</h1>
+
+      {/* Search bar */}
+      <div className="w-full max-w-[900px] mb-4 flex gap-2">
+        <input
+          type="text"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Search description…"
+          className="border rounded p-2 flex-1"
+        />
+        {search && (
+          <button
+            type="button"
+            onClick={() => setSearch("")}
+            className="px-3 py-2 border rounded"
+            aria-label="Clear search"
+          >
+            Clear
+          </button>
+        )}
+      </div>
       <div className="flex flex-wrap max-w-[900px]">
-        {products.map((product) => (
+        {filteredProducts.map((product) => (
           <ProductCard
             key={product.id}
             p={product}
             onDelete={() => deleteProductByIN(product.productIN)}
+            onEdit={(id) => editProductByID(id)}
           />
         ))}
       </div>
+
+      {/* Optional: empty state */}
+      {filteredProducts.length === 0 && (
+        <p className="text-gray-500 mt-6">
+          No products match that description.
+        </p>
+      )}
     </div>
   );
 }
