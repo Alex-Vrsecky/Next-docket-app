@@ -1,7 +1,7 @@
 // components/CSVUploader.tsx
 "use client";
 
-import { useState } from "react";
+import { useState, type ChangeEvent } from "react";
 import Papa from "papaparse";
 import { addDoc, collection } from "firebase/firestore";
 import { db } from "@/app/firebase/firebaseInit"; // adjust to your config
@@ -10,9 +10,7 @@ export default function CSVUploader() {
   const [uploading, setUploading] = useState(false);
   const [message, setMessage] = useState("");
 
-  const handleFileUpload = async (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
+  const handleFileUpload = async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
 

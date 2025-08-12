@@ -9,13 +9,13 @@ import {
   ModalHeader,
   useDisclosure,
 } from "@heroui/react";
-import React from "react";
+import { type ReactNode } from "react";
 
 interface ConfirmDialogProps {
   title: string;
   message: string;
   onConfirm: () => void;
-  trigger: React.ReactNode;
+  trigger: ReactNode;
 }
 
 export default function ConfirmDialog({
