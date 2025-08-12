@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import { useState } from "react";
 import { collection, addDoc, getDocs } from "firebase/firestore";
 import Button from "../components/Button";
 import { db } from "../firebase/firebaseInit";
