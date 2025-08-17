@@ -14,6 +14,16 @@ import {
 import { Button } from "@heroui/react";
 import { db } from "../firebase/firebaseInit";
 
+type ProductDraft = Partial<{
+  Desc: string;
+  Length: string;
+  category: string;
+  subCategory: string;
+  imageSrc: string;
+  priceWithNote: string;
+  productIN: string;
+}>;
+
 export default function AddProduct() {
   const [Desc, setDesc] = useState(""); // description
   const [Length, setLength] = useState(""); // e.g. "2.4m"
@@ -31,29 +41,20 @@ export default function AddProduct() {
   // Track if we prefilled from a draft so we don't auto-select defaults that overwrite it
   const prefilledRef = useRef(false);
 
-  // Prefill from sessionStorage (when coming from Edit page "Add Product")
   useEffect(() => {
-    try {
-      const raw =
-        typeof window !== "undefined"
-          ? sessionStorage.getItem("productDraft")
-          : null;
-      if (raw) {
-        const d = JSON.parse(raw);
-        setDesc(d.Desc || "");
-        setLength(d.Length || "");
-        setCategory(d.category || "");
-        setSubCategory(d.subCategory || "");
-        setImageSrc(d.imageSrc || "");
-        setPriceWithNote(d.priceWithNote || "");
-        setProductIN(d.productIN || "");
-        prefilledRef.current = true;
-        // Keep the draft so fields persist even if the user navigates away and back
-        // If you prefer to clear it after hydration, uncomment the next line:
-        // sessionStorage.removeItem("productDraft");
-      }
-    } catch (e) {
-      console.warn("Failed to parse productDraft from sessionStorage");
+    const d = loadProductDraftFromSession();
+    if (d) {
+      setDesc(d.Desc ?? "");
+      setLength(d.Length ?? "");
+      setCategory(d.category ?? "");
+      setSubCategory(d.subCategory ?? "");
+      setImageSrc(d.imageSrc ?? "");
+      setPriceWithNote(d.priceWithNote ?? "");
+      setProductIN(d.productIN ?? "");
+      prefilledRef.current = true;
+
+      // If you prefer to clear it after hydration, uncomment:
+      // sessionStorage.removeItem("productDraft");
     }
   }, []);
 
@@ -91,7 +92,7 @@ export default function AddProduct() {
       const snapshot = await getDocs(collection(db, "products"));
       const fromProducts: string[] = [];
       snapshot.docs.forEach((docSnap) => {
-        const data = docSnap.data() as any;
+        const data = docSnap.data() as ProductDraft;
         if (data.category === category && data.subCategory) {
           fromProducts.push(String(data.subCategory));
         }
@@ -144,6 +145,32 @@ export default function AddProduct() {
       setError("Failed to add category.");
     }
   };
+
+  function loadProductDraftFromSession(): ProductDraft | null {
+    if (typeof window === "undefined") return null;
+    const raw = sessionStorage.getItem("productDraft");
+    if (!raw) return null;
+
+    try {
+      const parsed: unknown = JSON.parse(raw);
+      // quick and light runtime check to avoid bad shapes
+      if (parsed && typeof parsed === "object") {
+        return parsed as ProductDraft;
+      }
+      return null;
+    } catch (e: unknown) {
+      // Narrow unknown instead of using `any`
+      if (e instanceof Error) {
+        console.warn(
+          "Failed to parse productDraft from sessionStorage:",
+          e.message
+        );
+      } else {
+        console.warn("Failed to parse productDraft from sessionStorage:", e);
+      }
+      return null;
+    }
+  }
 
   const slug = (s: string) =>
     (s || "")

@@ -48,6 +48,8 @@ export default function EditProductPage() {
   // For selects
   const [categories, setCategories] = useState<string[]>([]);
   const [subCategories, setSubCategories] = useState<string[]>([]);
+  const [newCategory, setNewCategory] = useState(""); // For new category input
+  const [newSubCategory, setNewSubCategory] = useState(""); // For new subcategory input
 
   // Fetch categories list (from existing products)
   useEffect(() => {
@@ -168,7 +170,7 @@ export default function EditProductPage() {
         priceWithNote,
         productIN,
       };
-      await updateDoc(ref, payload as any);
+      await updateDoc(ref, { ...payload });
       toast.success("Changes saved.");
       // router.back(); // Uncomment if you want to go back after save
     } catch (e) {
@@ -186,7 +188,7 @@ export default function EditProductPage() {
         <div className="border rounded-xl shadow bg-white p-4 w-[320px]">
           <div className="font-semibold mb-1">Add a new product?</div>
           <p className="text-sm text-gray-600 mb-3">
-            You're currently editing an existing product. Do you want to switch
+            Youre currently editing an existing product. Do you want to switch
             and create a new one instead?
           </p>
           <div className="flex justify-end gap-2">
@@ -243,7 +245,7 @@ export default function EditProductPage() {
 
   return (
     <div className="bg-white p-6 shadow rounded space-y-4">
-      <Toaster richColors closeButton position="top-right" />
+      <Toaster richColors closeButton position="top-left" />
 
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-bold">Edit Product</h1>
@@ -307,6 +309,27 @@ export default function EditProductPage() {
               </option>
             ))}
           </select>
+          <div className="flex">
+            <input
+              type="text"
+              value={newCategory}
+              onChange={(e) => setNewCategory(e.target.value)}
+              placeholder="Add new category"
+              className="border rounded p-2 mt-2 flex-1"
+            />
+            <Button
+              type="button"
+              className="border rounded p-2 mt-2"
+              onPress={() => {
+                if (newCategory) {
+                  setCategories((prev) => [...prev, newCategory]);
+                  setNewCategory("");
+                }
+              }}
+            >
+              +
+            </Button>
+          </div>
         </div>
 
         {/* Subcategory */}
@@ -324,6 +347,27 @@ export default function EditProductPage() {
               </option>
             ))}
           </select>
+          <div className="flex">
+            <input
+              type="text"
+              value={newSubCategory}
+              onChange={(e) => setNewSubCategory(e.target.value)}
+              placeholder="Add new subcategory"
+              className="border rounded p-2 mt-2 flex-1"
+            />
+            <Button
+              type="button"
+              className="border rounded p-2 mt-2"
+              onPress={() => {
+                if (newSubCategory) {
+                  setSubCategories((prev) => [...prev, newSubCategory]);
+                  setNewSubCategory("");
+                }
+              }}
+            >
+              +
+            </Button>
+          </div>
         </div>
 
         {/* imageSrc */}

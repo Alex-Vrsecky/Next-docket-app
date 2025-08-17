@@ -1,5 +1,7 @@
 "use client";
 
+import { Button } from "@heroui/react";
+
 interface CategoryInterface {
   name?: string;
   subCategories?: string[];
@@ -44,51 +46,62 @@ export default function CategoryDropdown({
 
   return (
     <div className="space-y-4">
-      <hr className="border-black" />
-      {/* Category buttons (flex layout with wrapping) */}
-      <div className="overflow-x-auto">
-        <div className="flex flex-wrap gap-2 sm:gap-4 w-full">
-          <button
-            onClick={() => onCategoryChange("")}
-            className={`px-2 py-1 text-md sm:text-[20px] rounded-md whitespace-normal border ${
+      <hr className="border-black/20" />
+
+      {/* Category buttons */}
+      <div className="overflow-x-auto snap-x pt-1">
+        <div className="flex flex-wrap gap-2 sm:gap-3 w-full justify-center">
+          <Button
+            onPress={() => onCategoryChange("")}
+            className={[
+              "px-3 py-1.5 text-md sm:text-[20px] rounded-xs border shadow-sm transition",
+              "hover:-translate-y-px hover:shadow",
+              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[rgb(13,82,87)]",
               selectedCategory === ""
-                ? "bg-blue-600 text-white"
-                : "bg-white text-gray-800"
-            }`}
+                ? "bg-blue-600 text-white border-blue-600"
+                : "bg-white text-gray-800 border-gray-300 hover:border-[rgb(13,82,87)]",
+            ].join(" ")}
           >
             All Categories
-          </button>
+          </Button>
+
           {sortedCategories.map((c) => (
-            <button
+            <Button
               key={c.name}
-              onClick={() => onCategoryChange(c.name!)}
-              className={`px-2 py-1 text-md sm:text-[20px] rounded-md whitespace-normal border ${
+              onPress={() => onCategoryChange(c.name!)}
+              className={[
+                "px-3 py-1.5 text-md sm:text-[20px] rounded-xs border shadow-sm transition snap-start",
+                "hover:-translate-y-px hover:shadow",
+                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[rgb(13,82,87)]",
                 selectedCategory === c.name
-                  ? "bg-green-900 text-white"
-                  : "bg-white text-gray-800"
-              }`}
+                  ? "bg-green-900 text-white border-green-900"
+                  : "bg-white text-gray-800 border-gray-300 hover:border-[rgb(13,82,87)]",
+              ].join(" ")}
             >
               {c.name}
-            </button>
+            </Button>
           ))}
         </div>
       </div>
 
-      <hr className="border-black" />
+      <hr className="border-black/20" />
 
       {/* Subcategory buttons */}
-      <div className="overflow-x-auto">
-        <div className="flex flex-wrap gap-2 sm:gap-4 w-full">
+      <div className="overflow-x-auto snap-x pt-1">
+        <div className="flex flex-wrap gap-2 sm:gap-3 w-full justify-center">
           <button
             onClick={() => onSubCategoryChange("")}
             disabled={!availableSubcats.length}
-            className={`px-2 py-1 text-md sm:text-[20px] rounded-md whitespace-normal border ${
+            className={[
+              "px-3 py-1.5 text-md sm:text-[20px] rounded-xs border shadow-sm transition snap-start",
+              "hover:-translate-y-px hover:shadow",
+              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[rgb(13,82,87)]",
               selectedSubCategory === ""
-                ? "bg-green-700 text-white"
-                : "bg-white text-gray-800"
-            } ${
-              !availableSubcats.length ? "opacity-50 cursor-not-allowed" : ""
-            }`}
+                ? "bg-green-700 text-white border-green-700"
+                : "bg-white text-gray-800 border-gray-300 hover:border-[rgb(13,82,87)]",
+              !availableSubcats.length &&
+                "opacity-50 cursor-not-allowed hover:shadow-none hover:translate-y-0",
+            ].join(" ")}
           >
             All Sub-Categories
           </button>
@@ -97,11 +110,14 @@ export default function CategoryDropdown({
             <button
               key={sub}
               onClick={() => onSubCategoryChange(sub)}
-              className={`px-2 py-1 text-md sm:text-[20px] rounded-md whitespace-normal border ${
+              className={[
+                "px-3 py-1.5 text-md sm:text-[20px] rounded-xs border shadow-sm transition",
+                "hover:-translate-y-px hover:shadow",
+                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[rgb(13,82,87)]",
                 selectedSubCategory === sub
-                  ? "bg-green-900 text-white"
-                  : "bg-white text-gray-800"
-              }`}
+                  ? "bg-green-900 text-white border-green-900"
+                  : "bg-white text-gray-800 border-gray-300 hover:border-[rgb(13,82,87)]",
+              ].join(" ")}
             >
               {sub}
             </button>
@@ -109,36 +125,42 @@ export default function CategoryDropdown({
         </div>
       </div>
 
-      <hr className="border-black" />
+      <hr className="border-black/20" />
 
-      {/* Length filter dropdown (single-select) */}
-      <div className="overflow-x-auto">
-        <div className="flex flex-wrap gap-2 sm:gap-4 w-full">
+      {/* Length filter */}
+      <div className="overflow-x-auto snap-x pt-1">
+        <div className="flex flex-wrap gap-2 sm:gap-3 w-full justify-center">
           <button
             onClick={() => onLengthChange("")}
             disabled={!availableLengths.length}
-            className={`px-2 py-1 text-md sm:text-[20px] rounded-md whitespace-normal border ${
+            className={[
+              "px-3 py-1.5 text-md sm:text-[20px] rounded-xs border shadow-sm transition snap-start",
+              "hover:-translate-y-px hover:shadow",
+              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[rgb(13,82,87)]",
               selectedLength === ""
-                ? "bg-yellow-600 text-white"
-                : "bg-white text-gray-800"
-            } ${
-              !availableLengths.length ? "opacity-50 cursor-not-allowed" : ""
-            }`}
+                ? "bg-yellow-600 text-white border-yellow-600"
+                : "bg-white text-gray-800 border-gray-300 hover:border-[rgb(13,82,87)]",
+              !availableLengths.length &&
+                "opacity-50 cursor-not-allowed hover:shadow-none hover:translate-y-0",
+            ].join(" ")}
           >
             All Lengths
           </button>
 
           {[...availableLengths]
-            .sort((a, b) => parseFloat(a) - parseFloat(b))
+            .sort((a, b) => (parseFloat(a) || 0) - (parseFloat(b) || 0))
             .map((length) => (
               <button
                 key={length}
                 onClick={() => handleLengthChange(length)}
-                className={`px-2 py-1 text-md sm:text-[20px] rounded-md whitespace-normal border ${
+                className={[
+                  "px-3 py-1.5 text-md sm:text-[20px] rounded-xs border shadow-sm transition",
+                  "hover:-translate-y-px hover:shadow",
+                  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[rgb(13,82,87)]",
                   selectedLength === length
-                    ? "bg-yellow-900 text-white"
-                    : "bg-white text-gray-800"
-                }`}
+                    ? "bg-yellow-900 text-white border-yellow-900"
+                    : "bg-white text-gray-800 border-gray-300 hover:border-[rgb(13,82,87)]",
+                ].join(" ")}
               >
                 {length}
               </button>
