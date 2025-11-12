@@ -121,7 +121,7 @@ export default function CategoryDropdown({
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.1, duration: 0.3 }}
-              className="w-full mb-3"
+              className="w-full mb-5"
             >
               <div className="grid grid-cols-4 gap-6">
                 {categories
@@ -187,9 +187,9 @@ export default function CategoryDropdown({
                   animate={{ opacity: 1, height: "auto" }}
                   exit={{ opacity: 0, height: 0 }}
                   transition={{ duration: 0.3 }}
-                  className="w-full overflow-hidden"
+                  className="w-full mb-5 overflow-hidden"
                 >
-                  <div className="flex gap-3 justify-start">
+                  <div className="grid grid-cols-4 gap-4">
                     {[...availableLengths]
                       .sort(
                         (a, b) => (parseFloat(a) || 0) - (parseFloat(b) || 0)
