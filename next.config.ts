@@ -7,7 +7,8 @@ const nextConfig: NextConfig = {
     domains: [
       "media.bunnings.com.au",
       "public.bowens.com.au",
-      "ubgeneralstore.com.au"
+      "ubgeneralstore.com.au",
+      "www.bunnings.com.au",
       // add more domains as needed
     ],
   },
