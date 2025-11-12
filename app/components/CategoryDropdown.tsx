@@ -1,6 +1,8 @@
 "use client";
 
 import { Button } from "@heroui/react";
+import CategoryButton from "./CategoryButton";
+import LocalNavigationButton from "./LocalNavigationButton";
 
 interface CategoryInterface {
   name?: string;
@@ -46,81 +48,38 @@ export default function CategoryDropdown({
 
   return (
     <div className="space-y-4">
-      <hr className="border-black/20" />
+      {/* Select search button */}
+      <div className="flex">
+        <LocalNavigationButton name="Search" onPress={() => null} />
+        <LocalNavigationButton name="Category" onPress={() => null} />
+      </div>
 
       {/* Category buttons */}
-      <div className="overflow-x-auto snap-x pt-1">
-        <div className="flex flex-wrap gap-2 sm:gap-3 w-full justify-center">
-          <Button
-            onPress={() => onCategoryChange("")}
-            className={[
-              "px-3 py-1.5 text-md sm:text-[20px] rounded-xs border shadow-sm transition",
-              "hover:-translate-y-px hover:shadow",
-              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[rgb(13,82,87)]",
-              selectedCategory === ""
-                ? "bg-blue-600 text-white border-blue-600"
-                : "bg-white text-gray-800 border-gray-300 hover:border-[rgb(13,82,87)]",
-            ].join(" ")}
-          >
-            All Categories
-          </Button>
-
-          {sortedCategories.map((c) => (
-            <Button
-              key={c.name}
-              onPress={() => onCategoryChange(c.name!)}
-              className={[
-                "px-3 py-1.5 text-md sm:text-[20px] rounded-xs border shadow-sm transition snap-start",
-                "hover:-translate-y-px hover:shadow",
-                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[rgb(13,82,87)]",
-                selectedCategory === c.name
-                  ? "bg-green-900 text-white border-green-900"
-                  : "bg-white text-gray-800 border-gray-300 hover:border-[rgb(13,82,87)]",
-              ].join(" ")}
-            >
-              {c.name}
-            </Button>
-          ))}
+      <div className="h-full max-w-sm grid content-center row-span-2">
+        <div className="grid grid-cols-4 gap-1">
+          {sortedCategories
+            .filter((c) => c.name)
+            .map((c) => (
+              <CategoryButton
+                key={c.name}
+                name={c.name!}
+                onPress={() => onCategoryChange(c.name!)}
+              />
+            ))}
         </div>
       </div>
 
       <hr className="border-black/20" />
 
       {/* Subcategory buttons */}
-      <div className="overflow-x-auto snap-x pt-1">
-        <div className="flex flex-wrap gap-2 sm:gap-3 w-full justify-center">
-          <button
-            onClick={() => onSubCategoryChange("")}
-            disabled={!availableSubcats.length}
-            className={[
-              "px-3 py-1.5 text-md sm:text-[20px] rounded-xs border shadow-sm transition snap-start",
-              "hover:-translate-y-px hover:shadow",
-              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[rgb(13,82,87)]",
-              selectedSubCategory === ""
-                ? "bg-green-700 text-white border-green-700"
-                : "bg-white text-gray-800 border-gray-300 hover:border-[rgb(13,82,87)]",
-              !availableSubcats.length &&
-                "opacity-50 cursor-not-allowed hover:shadow-none hover:translate-y-0",
-            ].join(" ")}
-          >
-            All Sub-Categories
-          </button>
-
+      <div className="h-full max-w-sm grid content-center row-span-2">
+        <div className="grid grid-cols-4 gap-4">
           {availableSubcats.map((sub) => (
-            <button
+            <CategoryButton
               key={sub}
-              onClick={() => onSubCategoryChange(sub)}
-              className={[
-                "px-3 py-1.5 text-md sm:text-[20px] rounded-xs border shadow-sm transition",
-                "hover:-translate-y-px hover:shadow",
-                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[rgb(13,82,87)]",
-                selectedSubCategory === sub
-                  ? "bg-green-900 text-white border-green-900"
-                  : "bg-white text-gray-800 border-gray-300 hover:border-[rgb(13,82,87)]",
-              ].join(" ")}
-            >
-              {sub}
-            </button>
+              name={sub}
+              onPress={() => onSubCategoryChange(sub)}
+            />
           ))}
         </div>
       </div>
@@ -144,7 +103,7 @@ export default function CategoryDropdown({
                 "opacity-50 cursor-not-allowed hover:shadow-none hover:translate-y-0",
             ].join(" ")}
           >
-            All Lengths
+            ngths
           </button>
 
           {[...availableLengths]
