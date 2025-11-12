@@ -51,7 +51,7 @@ export default function CategoryDropdown({
   return (
     <div className="flex flex-col gap-2 p-4 items-center">
       {/* Select search button */}
-      <div className="flex gap-2 w-[300px]">
+      <div className="flex gap-2 w-full max-w-[300px] mb-2">
         <LocalNavigationButton
           name="Search"
           onPress={() => setActiveView("search")}
@@ -73,7 +73,7 @@ export default function CategoryDropdown({
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
             transition={{ duration: 0.3, ease: "easeInOut" }}
-            className="w-full w-[300px]"
+            className="w-full max-w-[300px]"
           >
             <div className="flex flex-col gap-4">
               <motion.div
@@ -87,7 +87,7 @@ export default function CategoryDropdown({
                   value={searchQuery}
                   onChange={(e) => onSearchChange(e.target.value)}
                   placeholder="Search..."
-                  className="w-full px-4 py-1 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
                 <AnimatePresence>
                   {searchQuery && (
@@ -122,7 +122,7 @@ export default function CategoryDropdown({
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.1, duration: 0.3 }}
-              className="w-full w-[300px] mb-5"
+              className="w-full max-w-[300px] mb-5"
             >
               <div className="grid grid-cols-4 gap-2">
                 {categories
@@ -155,7 +155,7 @@ export default function CategoryDropdown({
                   animate={{ opacity: 1, height: "auto" }}
                   exit={{ opacity: 0, height: 0 }}
                   transition={{ duration: 0.3 }}
-                  className="w-full w-[300px] mb-5 overflow-hidden"
+                  className="w-full max-w-[300px] mb-5 overflow-hidden"
                 >
                   <div className="grid grid-cols-4 gap-2">
                     {availableSubcats.map((sub, index) => (
@@ -181,16 +181,16 @@ export default function CategoryDropdown({
 
             {/* Length filter */}
             <AnimatePresence mode="wait">
-              {availableLengths.length > 0 && (
+              {availableLengths.length > 1 && (
                 <motion.div
                   key="lengths"
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: "auto" }}
                   exit={{ opacity: 0, height: 0 }}
                   transition={{ duration: 0.3 }}
-                  className="w-full w-[300px] overflow-hidden"
+                  className="w-full max-w-[300px] overflow-hidden"
                 >
-                  <div className="flex flex-wrap gap-2 justify-center">
+                  <div className="flex flex-wrap gap-2 justify-start">
                     {[...availableLengths]
                       .sort(
                         (a, b) => (parseFloat(a) || 0) - (parseFloat(b) || 0)
