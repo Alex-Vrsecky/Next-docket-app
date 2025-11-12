@@ -14,7 +14,7 @@ export default function LocalNavigationButton({
 }: LocalNavigationButtonProps) {
   return (
     <div
-      className="w-40 h-6 rounded-lg border border-gray-300 "
+      className="w-full h-6 rounded-lg border border-gray-300 "
       style={{ backgroundColor: isActive ? "#0D5257" : "white" }}
     >
       <Button

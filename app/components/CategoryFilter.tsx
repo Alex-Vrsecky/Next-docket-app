@@ -10,8 +10,8 @@ import {
   doc,
 } from "firebase/firestore";
 import { db } from "../firebase/firebaseInit";
-import CategoryDropdown from "./CategoryDropdown";
 import ProductCard from "./ProductCard";
+import ProductLocatorDropdown from "./ProductLocatorDropdown";
 
 interface ProductInterface {
   Desc: string;
@@ -304,8 +304,8 @@ export default function CategoryFilter() {
   }
 
   return (
-    <div className="space-y-4">
-      <CategoryDropdown
+    <div className="flex flex-col">
+      <ProductLocatorDropdown
         categories={categories}
         availableSubcats={availableSubcats}
         selectedCategory={selectedCategory}

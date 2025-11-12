@@ -38,10 +38,8 @@ export default function CategoryDropdown({
 }: CategoryDropdownProps) {
   const handleLengthChange = (length: string) => {
     if (selectedLength === length) {
-      // Deselect the length if it's already selected
       onLengthChange("");
     } else {
-      // Select the new length
       onLengthChange(length);
     }
   };
@@ -51,7 +49,7 @@ export default function CategoryDropdown({
   return (
     <div className="flex flex-col gap-2 p-4 items-center">
       {/* Select search button */}
-      <div className="flex gap-2 w-full max-w-[300px] mb-2">
+      <div className="flex gap-2 w-full max-w-[350px] mb-2">
         <LocalNavigationButton
           name="Search"
           onPress={() => setActiveView("search")}
@@ -73,7 +71,7 @@ export default function CategoryDropdown({
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
             transition={{ duration: 0.3, ease: "easeInOut" }}
-            className="w-full max-w-[300px]"
+            className="w-full max-w-[350px]"
           >
             <div className="flex flex-col gap-4">
               <motion.div
@@ -97,7 +95,7 @@ export default function CategoryDropdown({
                       exit={{ opacity: 0, scale: 0.8 }}
                       transition={{ duration: 0.2 }}
                       onClick={() => onSearchChange("")}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-900 hover:text-gray-600"
                       aria-label="Clear search"
                     >
                       ✕
@@ -116,15 +114,16 @@ export default function CategoryDropdown({
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
             transition={{ duration: 0.3, ease: "easeInOut" }}
+            className="w-full max-w-[350px]"
           >
             {/* Category buttons */}
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.1, duration: 0.3 }}
-              className="w-full max-w-[300px] mb-5"
+              className="w-full mb-3"
             >
-              <div className="grid grid-cols-4 gap-2">
+              <div className="grid grid-cols-4 gap-6">
                 {categories
                   .filter((c) => c.name)
                   .map((c, index) => (
@@ -155,9 +154,9 @@ export default function CategoryDropdown({
                   animate={{ opacity: 1, height: "auto" }}
                   exit={{ opacity: 0, height: 0 }}
                   transition={{ duration: 0.3 }}
-                  className="w-full max-w-[300px] mb-5 overflow-hidden"
+                  className="w-full mb-5 overflow-hidden"
                 >
-                  <div className="grid grid-cols-4 gap-2">
+                  <div className="grid grid-cols-4 gap-6">
                     {availableSubcats.map((sub, index) => (
                       <motion.div
                         key={sub}
@@ -188,9 +187,9 @@ export default function CategoryDropdown({
                   animate={{ opacity: 1, height: "auto" }}
                   exit={{ opacity: 0, height: 0 }}
                   transition={{ duration: 0.3 }}
-                  className="w-full max-w-[300px] overflow-hidden"
+                  className="w-full overflow-hidden"
                 >
-                  <div className="flex flex-wrap gap-2 justify-start">
+                  <div className="flex gap-3 justify-start">
                     {[...availableLengths]
                       .sort(
                         (a, b) => (parseFloat(a) || 0) - (parseFloat(b) || 0)
