@@ -1,8 +1,10 @@
 "use client";
 
-import { Button } from "@heroui/react";
 import CategoryButton from "./CategoryButton";
 import LocalNavigationButton from "./LocalNavigationButton";
+import FilterButton from "./FilterButton";
+import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface CategoryInterface {
   name?: string;
@@ -14,28 +16,26 @@ interface CategoryDropdownProps {
   availableSubcats: string[];
   selectedCategory: string;
   selectedSubCategory: string;
-  selectedLength: string; // Keep this as a single string to allow only one selection
+  selectedLength: string;
   onCategoryChange: (category: string) => void;
   onSubCategoryChange: (sub: string) => void;
-  onLengthChange: (length: string) => void; // Change to handle single selection
+  onLengthChange: (length: string) => void;
   availableLengths: string[];
+  onSearchChange: (search: string) => void;
+  searchQuery: string;
 }
 
 export default function CategoryDropdown({
   categories,
   availableSubcats,
-  selectedCategory,
-  selectedSubCategory,
   selectedLength,
   onCategoryChange,
   onSubCategoryChange,
   onLengthChange,
   availableLengths,
+  onSearchChange,
+  searchQuery,
 }: CategoryDropdownProps) {
-  const sortedCategories = [...categories].sort((a, b) =>
-    (a.name || "").localeCompare(b.name || "")
-  );
-
   const handleLengthChange = (length: string) => {
     if (selectedLength === length) {
       // Deselect the length if it's already selected
@@ -46,86 +46,179 @@ export default function CategoryDropdown({
     }
   };
 
+  const [activeView, setActiveView] = useState<"search" | "category">("search");
+
   return (
-    <div className="space-y-4">
+    <div className="flex flex-col gap-2 p-4 items-center">
       {/* Select search button */}
-      <div className="flex">
-        <LocalNavigationButton name="Search" onPress={() => null} />
-        <LocalNavigationButton name="Category" onPress={() => null} />
+      <div className="flex gap-2 w-[300px]">
+        <LocalNavigationButton
+          name="Search"
+          onPress={() => setActiveView("search")}
+          isActive={activeView === "search"}
+        />
+        <LocalNavigationButton
+          name="Category"
+          onPress={() => setActiveView("category")}
+          isActive={activeView === "category"}
+        />
       </div>
 
-      {/* Category buttons */}
-      <div className="h-full max-w-sm grid content-center row-span-2">
-        <div className="grid grid-cols-4 gap-1">
-          {sortedCategories
-            .filter((c) => c.name)
-            .map((c) => (
-              <CategoryButton
-                key={c.name}
-                name={c.name!}
-                onPress={() => onCategoryChange(c.name!)}
-              />
-            ))}
-        </div>
-      </div>
-
-      <hr className="border-black/20" />
-
-      {/* Subcategory buttons */}
-      <div className="h-full max-w-sm grid content-center row-span-2">
-        <div className="grid grid-cols-4 gap-4">
-          {availableSubcats.map((sub) => (
-            <CategoryButton
-              key={sub}
-              name={sub}
-              onPress={() => onSubCategoryChange(sub)}
-            />
-          ))}
-        </div>
-      </div>
-
-      <hr className="border-black/20" />
-
-      {/* Length filter */}
-      <div className="overflow-x-auto snap-x pt-1">
-        <div className="flex flex-wrap gap-2 sm:gap-3 w-full justify-center">
-          <button
-            onClick={() => onLengthChange("")}
-            disabled={!availableLengths.length}
-            className={[
-              "px-3 py-1.5 text-md sm:text-[20px] rounded-xs border shadow-sm transition snap-start",
-              "hover:-translate-y-px hover:shadow",
-              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[rgb(13,82,87)]",
-              selectedLength === ""
-                ? "bg-yellow-600 text-white border-yellow-600"
-                : "bg-white text-gray-800 border-gray-300 hover:border-[rgb(13,82,87)]",
-              !availableLengths.length &&
-                "opacity-50 cursor-not-allowed hover:shadow-none hover:translate-y-0",
-            ].join(" ")}
+      {/* Animated view transitions */}
+      <AnimatePresence mode="wait">
+        {activeView === "search" && (
+          <motion.section
+            key="search"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.3, ease: "easeInOut" }}
+            className="w-full w-[300px]"
           >
-            ngths
-          </button>
-
-          {[...availableLengths]
-            .sort((a, b) => (parseFloat(a) || 0) - (parseFloat(b) || 0))
-            .map((length) => (
-              <button
-                key={length}
-                onClick={() => handleLengthChange(length)}
-                className={[
-                  "px-3 py-1.5 text-md sm:text-[20px] rounded-xs border shadow-sm transition",
-                  "hover:-translate-y-px hover:shadow",
-                  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[rgb(13,82,87)]",
-                  selectedLength === length
-                    ? "bg-yellow-900 text-white border-yellow-900"
-                    : "bg-white text-gray-800 border-gray-300 hover:border-[rgb(13,82,87)]",
-                ].join(" ")}
+            <div className="flex flex-col gap-4">
+              <motion.div
+                initial={{ scale: 0.95 }}
+                animate={{ scale: 1 }}
+                transition={{ delay: 0.1, duration: 0.2 }}
+                className="relative"
               >
-                {length}
-              </button>
-            ))}
-        </div>
-      </div>
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => onSearchChange(e.target.value)}
+                  placeholder="Search..."
+                  className="w-full px-4 py-1 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+                <AnimatePresence>
+                  {searchQuery && (
+                    <motion.button
+                      initial={{ opacity: 0, scale: 0.8 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.8 }}
+                      transition={{ duration: 0.2 }}
+                      onClick={() => onSearchChange("")}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                      aria-label="Clear search"
+                    >
+                      ✕
+                    </motion.button>
+                  )}
+                </AnimatePresence>
+              </motion.div>
+            </div>
+          </motion.section>
+        )}
+
+        {activeView === "category" && (
+          <motion.section
+            key="category"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.3, ease: "easeInOut" }}
+          >
+            {/* Category buttons */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.1, duration: 0.3 }}
+              className="w-full w-[300px] mb-5"
+            >
+              <div className="grid grid-cols-4 gap-2">
+                {categories
+                  .filter((c) => c.name)
+                  .map((c, index) => (
+                    <motion.div
+                      key={c.name}
+                      initial={{ opacity: 0, scale: 0.8 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{
+                        delay: 0.1 + index * 0.03,
+                        duration: 0.2,
+                      }}
+                    >
+                      <CategoryButton
+                        name={c.name!}
+                        onPress={() => onCategoryChange(c.name!)}
+                      />
+                    </motion.div>
+                  ))}
+              </div>
+            </motion.div>
+
+            {/* Subcategory buttons */}
+            <AnimatePresence mode="wait">
+              {availableSubcats.length > 0 && (
+                <motion.div
+                  key="subcategories"
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  exit={{ opacity: 0, height: 0 }}
+                  transition={{ duration: 0.3 }}
+                  className="w-full w-[300px] mb-5 overflow-hidden"
+                >
+                  <div className="grid grid-cols-4 gap-2">
+                    {availableSubcats.map((sub, index) => (
+                      <motion.div
+                        key={sub}
+                        initial={{ opacity: 0, scale: 0.8 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{
+                          delay: index * 0.03,
+                          duration: 0.2,
+                        }}
+                      >
+                        <CategoryButton
+                          name={sub}
+                          onPress={() => onSubCategoryChange(sub)}
+                        />
+                      </motion.div>
+                    ))}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* Length filter */}
+            <AnimatePresence mode="wait">
+              {availableLengths.length > 0 && (
+                <motion.div
+                  key="lengths"
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  exit={{ opacity: 0, height: 0 }}
+                  transition={{ duration: 0.3 }}
+                  className="w-full w-[300px] overflow-hidden"
+                >
+                  <div className="flex flex-wrap gap-2 justify-center">
+                    {[...availableLengths]
+                      .sort(
+                        (a, b) => (parseFloat(a) || 0) - (parseFloat(b) || 0)
+                      )
+                      .map((length, index) => (
+                        <motion.div
+                          key={length}
+                          initial={{ opacity: 0, scale: 0.8 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          transition={{
+                            delay: index * 0.02,
+                            duration: 0.2,
+                          }}
+                        >
+                          <FilterButton
+                            name={length}
+                            onPress={() => handleLengthChange(length)}
+                          />
+                        </motion.div>
+                      ))
+                      .reverse()}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </motion.section>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

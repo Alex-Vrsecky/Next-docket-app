@@ -9,25 +9,20 @@ interface CategoryButtonProps {
 
 export default function CategoryButton({ name, onPress }: CategoryButtonProps) {
   return (
-    <div>
-      <div className="w-16 h-16 relative rounded-lg">
-        <div className="w-16 h-16 relative rounded-lg bg-white shadow-[0px_0px_4px_1px_rgba(0,0,0,0.25)]">
-          <Image
-            src="@public/block-brick.svg"
-            alt={"image"}
-            width={20}
-            height={20}
-            className="w-full h-full object-contain rounded-lg"
-          />
-
-          <Button
-            onPress={onPress}
-            className="w-full h-full flex items-end justify-center pb-1 text-black text-[9px] font-bold font-['Inter']"
-          >
-            {name}
-          </Button>
-        </div>
-      </div>
+    <div className="w-16 h-16 rounded-lg bg-white border border-gray-300 ">
+      <Button
+        onPress={onPress}
+        className="w-full h-full flex flex-col items-center justify-center gap-1 text-black text-[9px] font-bold font-['Inter']"
+      >
+        <Image
+          src="/block-brick.svg"
+          alt="image"
+          width={20}
+          height={20}
+          className="w-5 h-5 object-contain"
+        />
+        {name}
+      </Button>
     </div>
   );
 }

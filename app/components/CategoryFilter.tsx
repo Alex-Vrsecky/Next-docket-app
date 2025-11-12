@@ -1,19 +1,17 @@
 "use client";
 
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   collection,
   getDocs,
   query as fsQuery,
   where,
-  limit as fsLimit,
-  doc,
   deleteDoc,
+  doc,
 } from "firebase/firestore";
 import { db } from "../firebase/firebaseInit";
 import CategoryDropdown from "./CategoryDropdown";
 import ProductCard from "./ProductCard";
-import { QueryDocumentSnapshot, DocumentData } from "firebase/firestore";
 
 interface ProductInterface {
   Desc: string;
@@ -41,11 +39,9 @@ const collator = new Intl.Collator(undefined, {
 });
 
 const CATEGORY_PRIORITY = [
-  "treated",
-  "untreated",
-  "all fencing",
+  "untreated pine",
+  "treated pine",
   "fencing",
-  "all sleepers",
   "sleepers",
   "offcuts",
   "yellowtongue",
@@ -58,9 +54,16 @@ const CATEGORY_PRIORITY = [
 
 function categoryRank(name: string): number {
   const n = (name || "").toLowerCase();
+
+  // First check for exact matches
+  const exactIndex = CATEGORY_PRIORITY.indexOf(n);
+  if (exactIndex !== -1) return exactIndex;
+
+  // Then check for partial matches
   for (let i = 0; i < CATEGORY_PRIORITY.length; i++) {
     if (n.includes(CATEGORY_PRIORITY[i])) return i;
   }
+
   return Number.POSITIVE_INFINITY;
 }
 
@@ -89,150 +92,181 @@ function looksNumericish(v: string) {
 }
 
 export default function CategoryFilter() {
-  const [categories, setCategories] = useState<CategoryInterface[]>([]);
-  const [products, setProducts] = useState<ProductInterface[]>([]);
+  // All products from DB - fetched once
+  const [allProducts, setAllProducts] = useState<ProductInterface[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // Filter states
   const [selectedCategory, setSelectedCategory] = useState<string>("");
-  const [availableSubcats, setAvailableSubcats] = useState<string[]>([]);
   const [selectedSubCategory, setSelectedSubCategory] = useState<string>("");
   const [selectedLength, setSelectedLength] = useState<string>("");
-  const [availableLengths, setAvailableLengths] = useState<string[]>([]);
+  const [searchQuery, setSearchQuery] = useState<string>("");
 
-  const PAGE_SIZE = 60;
-  const lastVisibleRef = useRef<QueryDocumentSnapshot<DocumentData> | null>(
-    null
-  );
-
-  // 1) Build category list
+  // Fetch all products once on mount
   useEffect(() => {
     (async () => {
-      const snap = await getDocs(collection(db, "products"));
-      const byCat: Record<string, Record<string, number>> = {};
-      snap.docs.forEach((d) => {
-        const p = { id: d.id, ...(d.data() as Omit<ProductInterface, "id">) };
-        const cat = p.category || "";
-        const sub = p.subCategory || "";
-        if (!cat) return;
-        byCat[cat] ||= {};
-        if (sub) byCat[cat][sub] = (byCat[cat][sub] || 0) + 1;
-      });
-
-      const arr: CategoryInterface[] = Object.entries(byCat)
-        .map(([categoryName, subcatCounts]) => {
-          const total = Object.values(subcatCounts).reduce((a, b) => a + b, 0);
-          const entries = Object.entries(subcatCounts);
-          const numericish = entries.every(([name]) => looksNumericish(name));
-          const subCategories = entries
-            .sort((a, b) => {
-              if (numericish) return collator.compare(a[0], b[0]);
-              if (b[1] !== a[1]) return b[1] - a[1];
-              return collator.compare(a[0], b[0]);
-            })
-            .map(([subcat]) => subcat);
-          return { name: categoryName, subCategories, total };
-        })
-        .sort((a, b) => {
-          const ra = categoryRank(a.name || "");
-          const rb = categoryRank(b.name || "");
-          if (ra !== rb) return ra - rb;
-          return collator.compare(a.name || "", b.name || "");
-        });
-
-      setCategories(arr);
+      try {
+        setLoading(true);
+        const snap = await getDocs(collection(db, "products"));
+        const products = snap.docs.map((d) => ({
+          id: d.id,
+          ...(d.data() as Omit<ProductInterface, "id">),
+        }));
+        setAllProducts(products);
+      } catch (error) {
+        console.error("Error fetching products:", error);
+      } finally {
+        setLoading(false);
+      }
     })();
   }, []);
 
-  // 2) Handle subcategories
-  useEffect(
-    () => {
-      if (!selectedCategory) {
-        setAvailableSubcats([]);
-        setSelectedSubCategory("");
-        return;
-      }
+  // Derive categories from all products
+  const categories = useMemo(() => {
+    const byCat: Record<string, Record<string, number>> = {};
 
-      const cat = categories.find((c) => c.name === selectedCategory);
-      const subcats = (cat?.subCategories ?? [])
-        .slice()
-        .sort((a, b) => collator.compare(a, b));
+    allProducts.forEach((p) => {
+      const cat = p.category || "";
+      const sub = p.subCategory || "";
+      if (!cat) return;
 
-      setAvailableSubcats(subcats);
+      byCat[cat] ||= {};
+      if (sub) byCat[cat][sub] = (byCat[cat][sub] || 0) + 1;
+    });
 
-      if (subcats.length === 1) {
-        setSelectedSubCategory(subcats[0]);
-      } else if (!subcats.includes(selectedSubCategory)) {
-        setSelectedSubCategory("");
-      }
-    }, // eslint-disable-next-line react-hooks/exhaustive-deps
-    [selectedCategory, selectedSubCategory]
-  );
+    const arr: CategoryInterface[] = Object.entries(byCat)
+      .map(([categoryName, subcatCounts]) => {
+        const total = Object.values(subcatCounts).reduce((a, b) => a + b, 0);
+        const entries = Object.entries(subcatCounts);
+        const numericish = entries.every(([name]) => looksNumericish(name));
 
-  // 3) Query products
-  useEffect(() => {
-    (async () => {
-      const base = collection(db, "products");
-      const clauses: import("firebase/firestore").QueryConstraint[] = [];
+        const subCategories = entries
+          .sort((a, b) => {
+            if (numericish) return collator.compare(a[0], b[0]);
+            if (b[1] !== a[1]) return b[1] - a[1];
+            return collator.compare(a[0], b[0]);
+          })
+          .map(([subcat]) => subcat);
 
-      if (selectedCategory)
-        clauses.push(where("category", "==", selectedCategory));
-      if (selectedSubCategory)
-        clauses.push(where("subCategory", "==", selectedSubCategory));
-      if (selectedLength) clauses.push(where("Length", "==", selectedLength));
+        return { name: categoryName, subCategories, total };
+      })
+      .sort((a, b) => {
+        const ra = categoryRank(a.name || "");
+        const rb = categoryRank(b.name || "");
+        if (ra !== rb) return ra - rb;
+        return collator.compare(a.name || "", b.name || "");
+      });
 
-      const q = fsQuery(base, ...clauses, fsLimit(PAGE_SIZE));
-      const snap = await getDocs(q);
-      lastVisibleRef.current = snap.docs[snap.docs.length - 1] || null;
+    return arr;
+  }, [allProducts]);
 
-      const rows = snap.docs.map((d) => ({
-        id: d.id,
-        ...(d.data() as Omit<ProductInterface, "id">),
-      }));
-      setProducts(rows);
-    })();
-  }, [selectedCategory, selectedSubCategory, selectedLength]);
+  // Derive available subcategories based on selected category
+  const availableSubcats = useMemo(() => {
+    if (!selectedCategory) return [];
 
-  // 4) Derive lengths
-  useEffect(() => {
-    (async () => {
-      if (!(selectedCategory && selectedSubCategory)) {
-        setAvailableLengths([]);
-        setSelectedLength("");
-        return;
-      }
-      const q = fsQuery(
-        collection(db, "products"),
-        where("category", "==", selectedCategory),
-        where("subCategory", "==", selectedSubCategory),
-        fsLimit(500)
-      );
-      const snap = await getDocs(q);
-      const unique = Array.from(
-        new Set(
-          snap.docs.map((d) =>
-            String((d.data() as ProductInterface).Length || "")
-          )
-        )
-      );
-      unique.sort(sortLengths);
-      setAvailableLengths(unique);
+    const cat = categories.find((c) => c.name === selectedCategory);
+    // Don't re-sort - use the order from categories memo
+    return cat?.subCategories ?? [];
+  }, [selectedCategory, categories]);
 
-      if (selectedLength && !unique.includes(selectedLength)) {
-        setSelectedLength("");
-      }
-    })();
-  }, [selectedCategory, selectedSubCategory, selectedLength]);
+  // Derive available lengths based on selected category and subcategory
+  const availableLengths = useMemo(() => {
+    if (!selectedCategory || !selectedSubCategory) return [];
 
-  const filtered = useMemo(() => {
-    return products
-      .filter((p) => !selectedCategory || p.category === selectedCategory)
+    const lengths = allProducts
       .filter(
-        (p) => !selectedSubCategory || p.subCategory === selectedSubCategory
+        (p) =>
+          p.category === selectedCategory &&
+          p.subCategory === selectedSubCategory
       )
-      .filter((p) => !selectedLength || p.Length === selectedLength)
-      .slice()
-      .sort((a, b) => sortLengths(a.Length, b.Length));
-  }, [products, selectedCategory, selectedSubCategory, selectedLength]);
+      .map((p) => String(p.Length || ""));
 
-  // Delete by productIN
+    const unique = Array.from(new Set(lengths));
+    unique.sort(sortLengths);
+    return unique;
+  }, [selectedCategory, selectedSubCategory, allProducts]);
+
+  // Filter products based on selections AND search query
+  const filteredProducts = useMemo(() => {
+    const searchLower = searchQuery.toLowerCase().trim();
+
+    return allProducts
+      .filter((p) => {
+        // Apply category filters only if not searching
+        if (!searchQuery) {
+          if (selectedCategory && p.category !== selectedCategory) return false;
+          if (selectedSubCategory && p.subCategory !== selectedSubCategory)
+            return false;
+          if (selectedLength && p.Length !== selectedLength) return false;
+          return true;
+        }
+
+        // Apply search filter
+        if (searchLower) {
+          const matchesSearch =
+            (p.category || "").toLowerCase().includes(searchLower) ||
+            (p.subCategory || "").toLowerCase().includes(searchLower) ||
+            (p.Desc || "").toLowerCase().includes(searchLower) ||
+            (p.Extra || "").toLowerCase().includes(searchLower) ||
+            (p.productIN || "").toLowerCase().includes(searchLower) ||
+            (p.Length || "").toLowerCase().includes(searchLower) ||
+            (p.LengthCoveragePackaging || "")
+              .toLowerCase()
+              .includes(searchLower);
+
+          return matchesSearch;
+        }
+
+        return true;
+      })
+      .sort((a, b) => sortLengths(a.Length, b.Length));
+  }, [
+    allProducts,
+    selectedCategory,
+    selectedSubCategory,
+    selectedLength,
+    searchQuery,
+  ]);
+
+  // Reset subcategory when category changes
+  useEffect(() => {
+    if (!selectedCategory) {
+      setSelectedSubCategory("");
+      setSelectedLength("");
+      return;
+    }
+
+    // Auto-select if only one subcategory
+    if (availableSubcats.length === 1) {
+      setSelectedSubCategory(availableSubcats[0]);
+    } else if (!availableSubcats.includes(selectedSubCategory)) {
+      setSelectedSubCategory("");
+      setSelectedLength("");
+    }
+  }, [selectedCategory, availableSubcats, selectedSubCategory]);
+
+  // Reset length when subcategory changes
+  useEffect(() => {
+    if (!selectedSubCategory) {
+      setSelectedLength("");
+      return;
+    }
+
+    if (!availableLengths.includes(selectedLength)) {
+      setSelectedLength("");
+    }
+  }, [selectedSubCategory, availableLengths, selectedLength]);
+
+  // Clear category filters when searching
+  useEffect(() => {
+    if (searchQuery) {
+      setSelectedCategory("");
+      setSelectedSubCategory("");
+      setSelectedLength("");
+    }
+  }, [searchQuery]);
+
+  // Delete product by productIN
   const deleteProductByIN = async (productIN: string) => {
     try {
       const q = fsQuery(
@@ -240,22 +274,34 @@ export default function CategoryFilter() {
         where("productIN", "==", productIN)
       );
       const snapshot = await getDocs(q);
+
       if (snapshot.empty) {
         console.warn("No products found with productIN:", productIN);
         return;
       }
+
       await Promise.all(
         snapshot.docs.map((snap) => deleteDoc(doc(db, "products", snap.id)))
       );
-      setProducts((prev) => prev.filter((p) => p.productIN !== productIN));
+
+      // Update local state
+      setAllProducts((prev) => prev.filter((p) => p.productIN !== productIN));
     } catch (err) {
       console.error("Error deleting products:", err);
     }
   };
 
-  const editProductByID = async (productINorId: string) => {
-    window.location.href = `/products/${productINorId}/edit`;
+  const editProductByID = (productID: string) => {
+    window.location.href = `/products/${productID}/edit`;
   };
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <p className="text-gray-500">Loading products...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">
@@ -269,12 +315,14 @@ export default function CategoryFilter() {
         onSubCategoryChange={setSelectedSubCategory}
         onLengthChange={setSelectedLength}
         availableLengths={availableLengths}
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
       />
 
       <div className="w-full flex justify-center">
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4 max-w-7xl">
-          {filtered.length > 0 ? (
-            filtered.map((p) => (
+        <div className="flex flex-wrap gap-4 justify-center max-w-[300px]">
+          {filteredProducts.length > 0 ? (
+            filteredProducts.map((p) => (
               <ProductCard
                 key={p.id}
                 p={p}
