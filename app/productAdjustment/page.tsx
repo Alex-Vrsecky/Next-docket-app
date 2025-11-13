@@ -122,9 +122,9 @@ export default function Page() {
 
         console.log("Loaded products:", loadedProducts);
         setProducts(loadedProducts);
-      } catch (err: any) {
-        console.error("Error loading products:", err);
-        setError(err.message);
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      } catch (err) {
+        setError("Failed to load products.");
       } finally {
         setLoading(false);
       }
@@ -206,6 +206,7 @@ export default function Page() {
         );
         setEditingProduct(null);
       }
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       console.error("Error saving product:", err);
       alert("Failed to save product: " + err.message);
@@ -236,6 +237,7 @@ export default function Page() {
       if (editingProduct?.productIN === productIN) {
         setEditingProduct(null);
       }
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       console.error("Error deleting product:", err);
       alert("Failed to delete product: " + err.message);
