@@ -47,7 +47,7 @@ export default function ProductCard({
 
           {/* Subcategory / Size - Main Title */}
           <h3 className="text-black text-xs font-medium font-inter leading-tight break-words">
-            {p.subCategory || "—"}
+            {p.subCategory || "—"} {p.Length || "—"}
           </h3>
 
           {/* Product IN */}
