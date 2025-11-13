@@ -10,9 +10,12 @@ import {
   arrayUnion,
   arrayRemove,
   serverTimestamp,
+  query,
+  orderBy,
+  addDoc,
 } from "firebase/firestore";
 import { db } from "../firebase/firebaseInit";
-import { Product, SavedList, User } from "./types";
+import { ProductItem, SavedList, User } from "./types";
 
 // Create or update user
 export async function createUser(
@@ -43,7 +46,7 @@ export async function getUser(uid: string): Promise<User | null> {
 export async function createSavedList(
   uid: string,
   listName: string,
-  products: Product[] = []
+  products: ProductItem[] = []
 ) {
   const listsRef = collection(db, "users", uid, "savedLists");
   const newListRef = doc(listsRef);
@@ -99,7 +102,7 @@ export async function getSavedList(
 export async function addProductToList(
   uid: string,
   listId: string,
-  product: Product
+  product: ProductItem
 ) {
   const listRef = doc(db, "users", uid, "savedLists", listId);
   await updateDoc(listRef, {
@@ -112,7 +115,7 @@ export async function addProductToList(
 export async function removeProductFromList(
   uid: string,
   listId: string,
-  product: Product
+  product: ProductItem
 ) {
   const listRef = doc(db, "users", uid, "savedLists", listId);
   await updateDoc(listRef, {
@@ -151,4 +154,85 @@ export async function renameSavedList(
     name: newName,
     updatedAt: serverTimestamp(),
   });
+}
+
+export async function getSavedDockets(): Promise<SavedList[]> {
+  try {
+    const docketsRef = collection(db, "saved_dockets");
+    const q = query(docketsRef, orderBy("createdAt", "desc"));
+    const snapshot = await getDocs(q);
+
+    return snapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    })) as SavedList[];
+  } catch (error) {
+    console.error("Error getting saved dockets:", error);
+    throw error;
+  }
+}
+
+export async function getSavedDocket(
+  docketId: string
+): Promise<SavedList | null> {
+  try {
+    const docketRef = doc(db, "saved_dockets", docketId);
+    const docketSnap = await getDoc(docketRef);
+
+    if (docketSnap.exists()) {
+      return {
+        id: docketSnap.id,
+        ...docketSnap.data(),
+      } as SavedList;
+    }
+    return null;
+  } catch (error) {
+    console.error("Error getting docket:", error);
+    throw error;
+  }
+}
+
+export async function createSavedDocket(
+  name: string,
+  products: ProductItem[] = []
+): Promise<string> {
+  try {
+    const docketsRef = collection(db, "saved_dockets");
+    const docRef = await addDoc(docketsRef, {
+      name: name.trim(),
+      products: products,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    });
+    return docRef.id;
+  } catch (error) {
+    console.error("Error creating docket:", error);
+    throw error;
+  }
+}
+
+export async function deleteSavedDocket(docketId: string): Promise<void> {
+  try {
+    const docketRef = doc(db, "saved_dockets", docketId);
+    await deleteDoc(docketRef);
+  } catch (error) {
+    console.error("Error deleting docket:", error);
+    throw error;
+  }
+}
+
+export async function updateDocketName(
+  docketId: string,
+  newName: string
+): Promise<void> {
+  try {
+    const docketRef = doc(db, "saved_dockets", docketId);
+    await updateDoc(docketRef, {
+      name: newName.trim(),
+      updatedAt: new Date().toISOString(),
+    });
+  } catch (error) {
+    console.error("Error updating docket name:", error);
+    throw error;
+  }
 }
