@@ -1,10 +1,11 @@
 // components/ProductCard.tsx
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import Barcode from "react-barcode";
 import { useCart } from "@/app/context/CartContext";
+import { ArrowBigDownIcon, ArrowBigUpIcon } from "lucide-react";
 
 interface ProductInterface {
   Desc: string;
@@ -30,13 +31,24 @@ export default function ProductCard({
 }) {
   const pathname = usePathname();
   const isManage = pathname === "/productAdjustment";
-  const [quantity, setQuantity] = useState(1);
-  const { addToCart } = useCart();
+  const [quantity, setQuantity] = useState(0);
+  const { addToCart, cart } = useCart();
   const [isAdding, setIsAdding] = useState(false);
 
+  // Get current quantity in cart
+  const cartItem = cart.find((item) => item.productIN === p.productIN);
+  const cartQuantity = cartItem ? cartItem.quantity : 0;
+
+  // Update local quantity when cart changes
+  useEffect(() => {
+    if (cartQuantity > 0) {
+      setQuantity(cartQuantity);
+    }
+  }, [cartQuantity]);
+
   const handleAddToDocket = () => {
-    if (quantity < 1) {
-      alert("Quantity must be at least 1");
+    if (quantity < 0) {
+      alert("Quantity must be at least 0");
       return;
     }
 
@@ -58,7 +70,6 @@ export default function ProductCard({
     // Visual feedback
     setTimeout(() => {
       setIsAdding(false);
-      setQuantity(1); // Reset quantity
     }, 300);
   };
 
@@ -101,20 +112,36 @@ export default function ProductCard({
             <div className="flex items-center gap-2">
               <input
                 type="number"
-                min="1"
+                min="0"
                 value={quantity}
-                onChange={(e) => setQuantity(parseInt(e.target.value) || 1)}
+                onChange={(e) => setQuantity(parseInt(e.target.value) || 0)}
                 className="py-1 px-2 h-6 w-16 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[rgb(13,82,87)]"
               />
               <button
                 onClick={handleAddToDocket}
                 disabled={isAdding}
-                className={`h-6 px-3 rounded-lg shadow-[0px_0px_4px_1px_rgba(0,0,0,0.25)] flex items-center justify-center transition-colors ${
+                className={`h-6 w-9 px-3 rounded-lg shadow-[0px_0px_4px_1px_rgba(0,0,0,0.25)] flex items-center justify-center transition-colors ${
                   isAdding ? "bg-green-600" : "bg-teal-800 hover:bg-teal-700"
                 }`}
               >
                 <span className="text-white text-[10px] font-bold font-inter">
                   {isAdding ? "✓" : "Add"}
+                </span>
+              </button>
+              <button
+                onClick={() => setQuantity(Math.max(0, quantity - 1))}
+                className="h-6 w-2 px-3 rounded-lg shadow-[0px_0px_4px_1px_rgba(0,0,0,0.25)] flex items-center justify-center transition-colors bg-teal-800 hover:bg-teal-700"
+              >
+                <span className="text-white text-[10px] font-bold font-inter">
+                  <ArrowBigDownIcon className="h-4 w-4" />
+                </span>
+              </button>
+              <button
+                onClick={() => setQuantity(quantity + 1)}
+                className="h-6 w-2 px-3 rounded-lg shadow-[0px_0px_4px_1px_rgba(0,0,0,0.25)] flex items-center justify-center transition-colors bg-teal-800 hover:bg-teal-700"
+              >
+                <span className="text-white text-[10px] font-bold font-inter">
+                  <ArrowBigUpIcon className="h-4 w-4" />
                 </span>
               </button>
             </div>

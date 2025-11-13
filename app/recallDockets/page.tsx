@@ -1,9 +1,8 @@
-// app/recallDocket/page.tsx
 "use client";
 
-import { useState, useEffect, ReactEventHandler } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Trash2, Plus, Minus, Eye } from "lucide-react";
+import { ArrowLeft, Trash2, Plus, Minus, Eye, EyeOff } from "lucide-react";
 import { useCart } from "@/app/context/CartContext";
 import {
   getSavedDockets,
@@ -20,7 +19,7 @@ export default function RecallDocketPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [savedDockets, setSavedDockets] = useState<SavedList[]>([]);
   const [loadingDockets, setLoadingDockets] = useState(true);
-  const [isVisible, setIsVisible] = useState(false);
+  const [selectedBarcode, setSelectedBarcode] = useState<string | null>(null);
 
   useEffect(() => {
     loadSavedDockets();
@@ -51,7 +50,6 @@ export default function RecallDocketPage() {
     setIsSaving(true);
 
     try {
-      // Transform cart items into ProductItem shape expected by createSavedDocket
       const products = cart.map((item) => ({
         productId: item.productIN,
         productDesc: item.description,
@@ -66,11 +64,9 @@ export default function RecallDocketPage() {
 
       await createSavedDocket(docketName, products);
 
-      // Clear cart and reset form
       clearCart();
       setDocketName("");
 
-      // Reload saved dockets
       await loadSavedDockets();
 
       alert("Docket saved successfully!");
@@ -82,8 +78,8 @@ export default function RecallDocketPage() {
     }
   };
 
-  const toggleVisibility: ReactEventHandler<HTMLButtonElement> = () => {
-    setIsVisible((prev) => !prev);
+  const toggleBarcodeVisibility = (productIN: string) => {
+    setSelectedBarcode((prev) => (prev === productIN ? null : productIN));
   };
 
   const handleDeleteDocket = async (docketId: string, name: string) => {
@@ -108,26 +104,20 @@ export default function RecallDocketPage() {
   const cartTotal = cart.reduce((sum, item) => sum + item.quantity, 0);
 
   return (
-    <div className="min-h-screen barcode w-[580px] flex flex-col justify-self-center">
-      {/* Header */}
-      <div className="bg-white shadow-sm sticky top-0 z-10">
-        <div className="max-w-4xl mx-auto px-4 py-4 flex items-center gap-4">
-          <button
-            onClick={() => router.back()}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-          >
-            <ArrowLeft className="h-5 w-5 text-gray-700" />
-          </button>
-          <h1 className="text-2xl font-bold text-gray-900">Current Docket</h1>
-        </div>
-      </div>
-
-      <div className="max-w-4xl mx-auto px-4 py-6 space-y-8">
+    <div className="min-h-screen barcode max-w-[450px] flex flex-col justify-self-center">
+      <button
+        onClick={() => router.back()}
+        className="m-4 p-2 hover:bg-teal-700  bg-teal-800 rounded-lg transition-colors"
+      >
+        <ArrowLeft className="h-10 w-10 text-white" />
+      </button>
+      <div className="max-w-[450px] mx-auto px-4 py-6 space-y-8">
         {/* Current Cart Section */}
         <div className="bg-white rounded-lg shadow-md p-6">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-xl font-bold text-gray-900">
-              Cart ({cartTotal} items)
+              Current Docket:{" "}
+              <span className="font-medium">{cartTotal} items</span>
             </h2>
             {cart.length > 0 && (
               <button
@@ -242,7 +232,7 @@ export default function RecallDocketPage() {
               <p className="text-gray-500">Loading dockets...</p>
             </div>
           ) : savedDockets.length === 0 ? (
-            <div className="bg-white rounded-lg shadow-md p-8 text-center">
+            <div className="bg-white rounded-lg shadow-[0px_0px_4px_1px_rgba(0,0,9,0.25)] p-8 text-center">
               <p className="text-gray-500">No saved dockets yet</p>
               <p className="text-gray-400 text-sm mt-2">
                 Save your first docket to see it here
@@ -253,7 +243,7 @@ export default function RecallDocketPage() {
               {savedDockets.map((docket) => (
                 <div
                   key={docket.id}
-                  className="bg-white rounded-lg shadow-md p-5 hover:shadow-lg transition-shadow"
+                  className="bg-white rounded-lg shadow-[0px_0px_4px_1px_rgba(0,0,0,0.25)] p-5 hover:shadow-lg transition-shadow"
                 >
                   <div className="flex justify-between items-start">
                     <div className="flex-1">
@@ -273,16 +263,16 @@ export default function RecallDocketPage() {
                       </div>
                       <div className="flex gap-4 text-sm text-gray-600 mb-3">
                         <span>
-                          <strong>description / length</strong> 
+                          <strong>description</strong>
                         </span>
-                        <span >
-                          <strong>category</strong> 
+                        <span className="ml-3">
+                          <strong>category</strong>
                         </span>
-                        <span className="ml-12">
-                          <strong>barcode</strong> 
+                        <span className="ml-8">
+                          <strong>barcode</strong>
                         </span>
-                        <span className="ml-17">
-                          <strong>quantity</strong> 
+                        <span className="ml-10">
+                          <strong>quantity</strong>
                         </span>
                       </div>
 
@@ -291,25 +281,24 @@ export default function RecallDocketPage() {
                           {docket.products.map((product, index) => (
                             <div
                               key={index}
-                              className="flex items-center justify-start text-sm bg-gray-50 p-2 rounded"
+                              className={`flex items-center justify-start text-sm bg-gray-50 p-2 rounded transition-opacity duration-200 ${
+                                selectedBarcode !== null &&
+                                selectedBarcode !== product.productIN
+                                  ? "opacity-7"
+                                  : "opacity-100"
+                              }`}
                             >
-                              <div className="flex flex-col mr-5 w-[120px]">
+                              <div className="flex flex-col mr-5 w-[80px]">
                                 {product.productDesc == product.Length ? (
-                                  <span>
-                                    {product.productDesc}
-                                  </span>
+                                  <span>{product.productDesc}</span>
                                 ) : (
                                   <>
-                                    <span>
-                                      {product.productDesc}
-                                    </span>
-                                    <span>
-                                      {product.Length}
-                                    </span>
+                                    <span>{product.productDesc}</span>
+                                    <span>{product.Length}</span>
                                   </>
                                 )}
                               </div>
-                              <span className="font-semibold w-[120px]">
+                              <span className="font-semibold w-[50px] mr-4">
                                 {product.category}
                               </span>
                               <Barcode
@@ -319,22 +308,26 @@ export default function RecallDocketPage() {
                                 width={1.3}
                                 fontSize={8}
                                 background="transparent"
-                                lineColor={isVisible ? "#111827" : "transparent"}
+                                lineColor={"#111827"}
                                 margin={0}
                               />
-                              <span className="text-black text-3xl ml-2">
+                              <span className="text-black text-3xl ml-5 w-9">
                                 {product.quantity}
                               </span>
-                              <button onClick={(e) => toggleVisibility(e)} className="ml-5">
-                                <Eye className="h-5 w-5 text-gray-600 hover:text-gray-800" />
+                              <button
+                                onClick={() =>
+                                  toggleBarcodeVisibility(product.productIN)
+                                }
+                                className="ml-2"
+                              >
+                                {selectedBarcode === product.productIN ? (
+                                  <EyeOff className="h-5 w-5 text-gray-800" />
+                                ) : (
+                                  <Eye className="h-5 w-5 text-gray-600 hover:text-gray-800" />
+                                )}
                               </button>
                             </div>
                           ))}
-                          {docket.products.length > 3 && (
-                            <p className="text-xs text-gray-500">
-                              +{docket.products.length - 3} more items
-                            </p>
-                          )}
                         </div>
                       )}
 
@@ -348,15 +341,16 @@ export default function RecallDocketPage() {
                             day: "numeric",
                           }
                         )}
+                        <button
+                          onClick={() =>
+                            handleDeleteDocket(docket.id, docket.name)
+                          }
+                          className="ml-4 p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                        >
+                          <Trash2 className="h-5 w-5" />
+                        </button>
                       </p>
                     </div>
-
-                    <button
-                      onClick={() => handleDeleteDocket(docket.id, docket.name)}
-                      className="ml-4 p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                    >
-                      <Trash2 className="h-5 w-5" />
-                    </button>
                   </div>
                 </div>
               ))}

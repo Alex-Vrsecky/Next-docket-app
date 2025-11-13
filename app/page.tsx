@@ -2,12 +2,17 @@
 
 import { ClipboardList, Menu, NotebookPen } from "lucide-react";
 import CategoryFilter from "./components/CategoryFilter";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import NavigationMenu from "./components/NavigationMenu";
 import { useAuth } from "../app/context/AuthContext";
+import { getSavedDocket } from "./database/firebaseService";
+import { SavedList } from "./database/types";
+import { useRouter } from "next/navigation";
+import { useCart } from "./context/CartContext";
 
 export default function HomePage() {
   const [isOpen, setIsOpen] = useState(false);
+  const [dockets, setDockets] = useState<SavedList | null>(null);
   const { firebaseUser, loading } = useAuth();
 
   const toggleMenu = () => setIsOpen(!isOpen);
@@ -24,7 +29,20 @@ export default function HomePage() {
     return null;
   };
 
+  useEffect(() => {
+    async function fetchDocket() {
+      if (firebaseUser) {
+        const docket = await getSavedDocket(firebaseUser.uid);
+        setDockets(docket);
+      }
+    }
+
+    fetchDocket();
+  }, [firebaseUser]);
+
   const userName = getUserName();
+  const router = useRouter();
+  const cart = useCart().cart;
 
   return (
     <main className="flex flex-col items-center min-h-screen bg-gray-50 p-6">
@@ -54,11 +72,12 @@ export default function HomePage() {
         <button
           className="relative grid h-10 w-10 place-items-center rounded-md hover:bg-gray-100 transition-colors"
           aria-label="View saved list"
+          onClick={() => router.push("/recallDockets")}
         >
           <NotebookPen className="h-6 w-6 text-gray-700" />
           {/* Badge for item count */}
-          <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-[rgb(13,82,87)] text-white text-xs font-bold flex items-center justify-center">
-            3
+          <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-[rgb(13,82,87)] text-white text-xs font-bold flex items-center justify-center cursor-pointer">
+            {cart.length}
           </span>
         </button>
 

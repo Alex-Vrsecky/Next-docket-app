@@ -17,7 +17,12 @@ export default function CategoryButton({
   const content = (
     <Button
       onPress={onPress}
-      className="w-16 h-16 flex flex-col items-center justify-center text-black text-[10px] font-bold font-['Inter'] break-words"
+      className="w-full h-full flex flex-col items-center justify-center text-black text-[9px] font-bold font-['Inter']"
+      style={{
+        whiteSpace: "normal",
+        wordBreak: "keep-all",
+        lineHeight: "1.0",
+      }}
     >
       <Image
         src="/block-brick.svg"
