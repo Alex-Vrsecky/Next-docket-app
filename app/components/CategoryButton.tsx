@@ -17,7 +17,7 @@ export default function CategoryButton({
   const content = (
     <Button
       onPress={onPress}
-      className="w-20 h-18 flex flex-col items-center justify-center text-black text-[10px] font-bold font-['Inter']"
+      className="w-18 h-18 flex flex-col items-center justify-center text-black text-[10px] font-bold font-['Inter']"
     >
       <Image
         src="/block-brick.svg"
@@ -31,7 +31,7 @@ export default function CategoryButton({
   );
 
   return (
-    <div className="w-20 h-18 rounded-lg bg-white border border-gray-300">
+    <div className="w-18 h-18 rounded-lg bg-white border border-gray-300">
       {href ? (
         <Link href={`/${href}`} className="block w-full h-full">
           {content}

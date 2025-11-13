@@ -51,7 +51,7 @@ export default function HomePage() {
               Select Feature
             </span>
           </div>
-          <div className="flex w-[330px] justify-between gap-2">
+          <div className="flex flex-wrap justify-start w-[330px] gap-2">
             {/* Navigation Links */}
             {navLinks.map((link) => (
               <CategoryButton
