@@ -2,17 +2,14 @@
 
 import { ClipboardList, Menu, NotebookPen } from "lucide-react";
 import CategoryFilter from "./components/CategoryFilter";
-import { useEffect, useState } from "react";
 import NavigationMenu from "./components/NavigationMenu";
 import { useAuth } from "../app/context/AuthContext";
-import { getSavedDocket } from "./database/firebaseService";
-import { SavedList } from "./database/types";
 import { useRouter } from "next/navigation";
 import { useCart } from "./context/CartContext";
+import { useState } from "react";
 
 export default function HomePage() {
   const [isOpen, setIsOpen] = useState(false);
-  const [dockets, setDockets] = useState<SavedList | null>(null);
   const { firebaseUser, loading } = useAuth();
 
   const toggleMenu = () => setIsOpen(!isOpen);
@@ -28,17 +25,6 @@ export default function HomePage() {
     }
     return null;
   };
-
-  useEffect(() => {
-    async function fetchDocket() {
-      if (firebaseUser) {
-        const docket = await getSavedDocket(firebaseUser.uid);
-        setDockets(docket);
-      }
-    }
-
-    fetchDocket();
-  }, [firebaseUser]);
 
   const userName = getUserName();
   const router = useRouter();
