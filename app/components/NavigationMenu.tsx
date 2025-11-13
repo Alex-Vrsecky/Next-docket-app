@@ -40,10 +40,10 @@ export default function NavigationMenu({
   };
 
   const navLinks = [
-    { name: "Adjust Products", href: "productAdjustment" },
-    { name: "Decking Calculator", href: "deckingCalculator" },
-    { name: "TimberLink Helper", href: "timberlinkHelper" },
-    { name: "Saved Dockets", href: "savedDockets" },
+    { name: "Products", href: "/" },
+    { name: "Adjustments", href: "productAdjustment" },
+    { name: "TimberLink", href: "timberlinkHelper" },
+    { name: "Recall Docket", href: "savedDockets" },
   ];
 
   return (

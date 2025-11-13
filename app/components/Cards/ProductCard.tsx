@@ -27,10 +27,10 @@ export default function ProductCard({
   onEdit?: (id: string) => void;
 }) {
   const pathname = usePathname();
-  const isManage = pathname === "/adjust";
+  const isManage = pathname === "/productAdjustment";
 
   return (
-    <div className="relative w-80 h-28">
+    <div className={`relative ${isManage ? "h-32" : "h-28"} w-80`}>
       {/* Main card background */}
       <div className="w-full h-full bg-white rounded-lg shadow-[0px_0px_4px_1px_rgba(0,0,0,0.25)] overflow-hidden">
         {/* Left section - Text info (constrained width to prevent overlap) */}

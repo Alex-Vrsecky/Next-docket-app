@@ -3,6 +3,7 @@
 import CategoryButton from "./Buttons/CategoryButton";
 import LocalNavigationButton from "./Buttons/LocalNavigationButton";
 import FilterButton from "./Buttons/FilterButton";
+import SearchBar from "./SearchBar";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -36,6 +37,8 @@ export default function CategoryDropdown({
   onSearchChange,
   searchQuery,
 }: CategoryDropdownProps) {
+  const [activeView, setActiveView] = useState<"search" | "category">("search");
+
   const handleLengthChange = (length: string) => {
     if (selectedLength === length) {
       onLengthChange("");
@@ -44,11 +47,9 @@ export default function CategoryDropdown({
     }
   };
 
-  const [activeView, setActiveView] = useState<"search" | "category">("search");
-
   return (
     <div className="flex flex-col gap-2 p-4 items-center">
-      {/* Select search button */}
+      {/* View Toggle Buttons */}
       <div className="flex gap-2 w-full max-w-[350px] mb-2">
         <LocalNavigationButton
           name="Search"
@@ -65,8 +66,9 @@ export default function CategoryDropdown({
         />
       </div>
 
-      {/* Animated view transitions */}
+      {/* Animated View Transitions */}
       <AnimatePresence mode="wait">
+        {/* Search View */}
         {activeView === "search" && (
           <motion.section
             key="search"
@@ -76,40 +78,15 @@ export default function CategoryDropdown({
             transition={{ duration: 0.3, ease: "easeInOut" }}
             className="w-full max-w-[350px]"
           >
-            <div className="flex flex-col gap-4">
-              <motion.div
-                initial={{ scale: 0.95 }}
-                animate={{ scale: 1 }}
-                transition={{ delay: 0.1, duration: 0.2 }}
-                className="relative"
-              >
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => onSearchChange(e.target.value)}
-                  placeholder="Search..."
-                  className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-                <AnimatePresence>
-                  {searchQuery && (
-                    <motion.button
-                      initial={{ opacity: 0, scale: 0.8 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      exit={{ opacity: 0, scale: 0.8 }}
-                      transition={{ duration: 0.2 }}
-                      onClick={() => onSearchChange("")}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-900 hover:text-gray-600"
-                      aria-label="Clear search"
-                    >
-                      ✕
-                    </motion.button>
-                  )}
-                </AnimatePresence>
-              </motion.div>
-            </div>
+            <SearchBar
+              searchQuery={searchQuery}
+              onSearchChange={onSearchChange}
+              placeholder="Search products..."
+            />
           </motion.section>
         )}
 
+        {/* Category View */}
         {activeView === "category" && (
           <motion.section
             key="category"
@@ -119,7 +96,7 @@ export default function CategoryDropdown({
             transition={{ duration: 0.3, ease: "easeInOut" }}
             className="w-full max-w-[350px]"
           >
-            {/* Category buttons */}
+            {/* Category Buttons */}
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -153,7 +130,7 @@ export default function CategoryDropdown({
               </div>
             </motion.div>
 
-            {/* Subcategory buttons */}
+            {/* Subcategory Buttons */}
             <AnimatePresence mode="wait">
               {availableSubcats.length > 0 && (
                 <motion.div
@@ -191,7 +168,7 @@ export default function CategoryDropdown({
               )}
             </AnimatePresence>
 
-            {/* Length filter */}
+            {/* Length Filter */}
             <AnimatePresence mode="wait">
               {availableLengths.length > 1 && (
                 <motion.div
