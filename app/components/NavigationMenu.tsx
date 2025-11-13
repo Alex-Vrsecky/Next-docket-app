@@ -43,7 +43,7 @@ export default function NavigationMenu({
     { name: "Products", href: "/" },
     { name: "Adjustments", href: "productAdjustment" },
     { name: "TimberLink", href: "timberlinkHelper" },
-    { name: "Recall Docket", href: "savedDockets" },
+    { name: "Recall Docket", href: "recallDockets" },
   ];
 
   return (

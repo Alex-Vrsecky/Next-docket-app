@@ -4,13 +4,14 @@ export interface Product {
   name: string;
   description?: string;
   quantity?: number;
-  // Add other product fields as needed
+  length: string;
+  productIN: string;
 }
 
 export interface SavedList {
   id: string;
   name: string;
-  products: Product[];
+  products: ProductItem[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -20,4 +21,15 @@ export interface User {
   firstName: string;
   lastName: string;
   email?: string;
+}
+
+export interface ProductItem {
+  productId: string;
+  productIN: string;
+  productDesc: string;
+  category: string;
+  subCategory: string;
+  Length: string;
+  quantity: number;
+  addedAt: string;
 }

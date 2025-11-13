@@ -17,25 +17,23 @@ export default function CategoryButton({
   const content = (
     <Button
       onPress={onPress}
-      className="w-18 h-18 flex flex-col items-center justify-center text-black text-[10px] font-bold font-['Inter']"
+      className="w-16 h-16 flex flex-col items-center justify-center text-black text-[10px] font-bold font-['Inter'] break-words"
     >
       <Image
         src="/block-brick.svg"
         alt="image"
         width={20}
         height={20}
-        className="w-5 h-5 object-contain"
+        className="w-5 h-5 object-contain break-words"
       />
-      <span className="w-18" lang="en">
-        {name}
-      </span>
+      <span lang="en">{name}</span>
     </Button>
   );
 
   return (
-    <div className="w-18 h-18 rounded-lg bg-white border border-gray-300">
+    <div className="w-16 h-16 rounded-lg bg-white border border-gray-300 break-words">
       {href ? (
-        <Link href={`/${href}`} className="block w-full h-full">
+        <Link href={`/${href}`} className="block w-full h-full break-words">
           {content}
         </Link>
       ) : (
