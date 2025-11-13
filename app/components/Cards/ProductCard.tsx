@@ -27,31 +27,31 @@ export default function ProductCard({
   onEdit?: (id: string) => void;
 }) {
   const pathname = usePathname();
-  const isManage = pathname === "/viewContent";
+  const isManage = pathname === "/productAdjustment";
 
   return (
-    <div className="relative w-80 h-28">
+    <div className={`relative ${isManage ? "h-32" : "h-28"} w-80`}>
       {/* Main card background */}
       <div className="w-full h-full bg-white rounded-lg shadow-[0px_0px_4px_1px_rgba(0,0,0,0.25)] overflow-hidden">
         {/* Left section - Text info (constrained width to prevent overlap) */}
         <div className="absolute left-4 top-3 flex flex-col gap-0.5 max-w-[140px]">
           {/* Category */}
-          <p className="text-black text-[10px] font-normal font-inter truncate">
+          <p className="text-black text-[10px] font-normal font-inter break-words">
             {p.category || "Category"}
           </p>
 
           {/* Description info */}
-          <p className="text-black text-xs font-extrabold font-inter truncate">
+          <p className="text-black text-xs font-extrabold font-inter break-words">
             {p.Desc || "—"}
           </p>
 
           {/* Subcategory / Size - Main Title */}
-          <h3 className="text-black text-xs font-medium font-inter leading-tight truncate">
+          <h3 className="text-black text-xs font-medium font-inter leading-tight break-words">
             {p.subCategory || "—"}
           </h3>
 
           {/* Product IN */}
-          <p className="text-black text-[10px] font-bold font-inter mt-0.5 truncate">
+          <p className="text-black text-[10px] font-bold font-inter mt-0.5 break-words">
             IN: {p.productIN || "0000000"}
           </p>
         </div>
