@@ -17,8 +17,9 @@ import { db } from "@/app/firebase/firebaseInit";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { useRouter } from "next/navigation";
 import NavigationMenu from "../components/NavigationMenu";
+import { BulkRenameModal } from "../components/BulkRename";
 
-interface ProductInterface {
+export interface ProductInterface {
   Desc: string;
   Extra: string;
   LengthCoveragePackaging: string;
@@ -44,38 +45,39 @@ export default function Page() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isAuthorized, setIsAuthorized] = useState(false);
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+  const [showBulkRename, setShowBulkRename] = useState(false);
 
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
 
   // Check authentication and authorization
   useEffect(() => {
     const auth = getAuth();
-    
+
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (!user) {
-        // User is not signed in, redirect to login
         router.push("/userSignIn");
         return;
       }
 
       try {
-        // Try to get the first name from displayName
         let firstName = "";
-        
+
         if (user.displayName) {
           firstName = user.displayName.split(" ")[0].toLowerCase();
         } else {
-          // If displayName is not set, try to get from Firestore users collection
           const userDoc = await getDoc(doc(db, "users", user.uid));
           if (userDoc.exists()) {
             const userData = userDoc.data();
-            firstName = (userData.firstName || userData.name || "").toLowerCase();
+            firstName = (
+              userData.firstName ||
+              userData.name ||
+              ""
+            ).toLowerCase();
           }
         }
 
-        console.log("First name:", firstName); // Debug log
+        console.log("First name:", firstName);
 
-        // Check if the first name is Alex or Karlee
         if (firstName === "alex" || firstName === "karlee") {
           setIsAuthorized(true);
         } else {
@@ -122,7 +124,7 @@ export default function Page() {
 
         console.log("Loaded products:", loadedProducts);
         setProducts(loadedProducts);
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
       } catch (err) {
         setError("Failed to load products.");
       } finally {
@@ -206,6 +208,7 @@ export default function Page() {
         );
         setEditingProduct(null);
       }
+
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       console.error("Error saving product:", err);
@@ -237,6 +240,7 @@ export default function Page() {
       if (editingProduct?.productIN === productIN) {
         setEditingProduct(null);
       }
+
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       console.error("Error deleting product:", err);
@@ -288,7 +292,7 @@ export default function Page() {
   return (
     <div className="flex flex-col items-center p-6 min-h-screen bg-gray-50 ">
       <NavigationMenu isOpen={isMenuOpen} toggleMenu={toggleMenu} />
-      
+
       <button
         onClick={toggleMenu}
         className="fixed top-4 right-4 z-40 p-3 bg-[rgb(13,82,87)] text-white rounded-lg hover:bg-[rgb(10,65,69)] transition-colors shadow-lg"
@@ -329,6 +333,14 @@ export default function Page() {
           </button>
         </div>
 
+        {/* Bulk Rename Button */}
+        <button
+          onClick={() => setShowBulkRename(true)}
+          className="w-full mb-4 px-4 py-2 bg-[rgb(13,82,87)] text-white rounded-lg font-semibold hover:bg-[rgb(10,65,69)] transition-colors text-sm"
+        >
+          Bulk Rename Categories
+        </button>
+
         {searchQuery && (
           <div className="text-sm text-gray-600">
             Found {filteredProducts.length} product
@@ -348,15 +360,27 @@ export default function Page() {
         </div>
       )}
 
+      {/* Bulk Rename Modal */}
+      {showBulkRename && (
+        <BulkRenameModal
+          products={products}
+          onClose={() => setShowBulkRename(false)}
+          onSave={(updatedProducts) => {
+            setProducts(updatedProducts);
+            setShowBulkRename(false);
+          }}
+        />
+      )}
+
       {(editingProduct || isAddingNew) && (
-          <div className="max-w-[380px] w-full max-h-[90vh] overflow-y-auto shadow-[0px_0px_4px_1px_rgba(0,0,0,0.25)] rounded-lg mb-5">
-            <ProductAdjustCard
-              p={isAddingNew ? null : editingProduct}
-              onSave={handleSave}
-              onCancel={handleCancel}
-              isAdding={isAddingNew}
-            />
-          </div>
+        <div className="max-w-[380px] w-full max-h-[90vh] overflow-y-auto shadow-[0px_0px_4px_1px_rgba(0,0,0,0.25)] rounded-lg mb-5">
+          <ProductAdjustCard
+            p={isAddingNew ? null : editingProduct}
+            onSave={handleSave}
+            onCancel={handleCancel}
+            isAdding={isAddingNew}
+          />
+        </div>
       )}
 
       {filteredProducts.length > 0 ? (
