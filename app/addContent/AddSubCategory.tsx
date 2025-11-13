@@ -8,7 +8,7 @@ import {
   updateDoc,
   arrayUnion,
 } from "firebase/firestore";
-import Button from "../components/Button";
+import Button from "../components/Buttons/Button";
 import { db } from "../firebase/firebaseInit";
 
 export default function AddSubCategory() {

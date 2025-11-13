@@ -10,7 +10,7 @@ import {
   doc,
 } from "firebase/firestore";
 import { db } from "../firebase/firebaseInit";
-import ProductCard from "./ProductCard";
+import ProductCard from "./Cards/ProductCard";
 import ProductLocatorDropdown from "./ProductLocatorDropdown";
 
 interface ProductInterface {

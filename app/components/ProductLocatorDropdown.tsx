@@ -1,8 +1,8 @@
 "use client";
 
-import CategoryButton from "./CategoryButton";
-import LocalNavigationButton from "./LocalNavigationButton";
-import FilterButton from "./FilterButton";
+import CategoryButton from "./Buttons/CategoryButton";
+import LocalNavigationButton from "./Buttons/LocalNavigationButton";
+import FilterButton from "./Buttons/FilterButton";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -57,7 +57,10 @@ export default function CategoryDropdown({
         />
         <LocalNavigationButton
           name="Category"
-          onPress={() => setActiveView("category")}
+          onPress={() => {
+            setActiveView("category");
+            onSearchChange("");
+          }}
           isActive={activeView === "category"}
         />
       </div>

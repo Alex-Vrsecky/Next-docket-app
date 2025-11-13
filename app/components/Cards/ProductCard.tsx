@@ -27,7 +27,7 @@ export default function ProductCard({
   onEdit?: (id: string) => void;
 }) {
   const pathname = usePathname();
-  const isManage = pathname === "/viewContent";
+  const isManage = pathname === "/adjust";
 
   return (
     <div className="relative w-80 h-28">

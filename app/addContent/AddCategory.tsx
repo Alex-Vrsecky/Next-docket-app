@@ -1,7 +1,7 @@
 "use client";
 import React, { useState } from "react";
 import { collection, addDoc, getDocs } from "firebase/firestore";
-import Button from "../components/Button";
+import Button from "../components/Buttons/Button";
 import { db } from "../firebase/firebaseInit";
 
 export default function AddCategory() {
