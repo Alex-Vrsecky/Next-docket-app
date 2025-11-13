@@ -42,7 +42,7 @@ export default function NavigationMenu({
   const navLinks = [
     { name: "Products", href: "/" },
     { name: "Adjustments", href: "productAdjustment" },
-    { name: "TimberLink", href: "timberlinkHelper" },
+    { name: "TimberLink", href: "timberLinkHelper" },
     { name: "Recall Docket", href: "recallDockets" },
   ];
 

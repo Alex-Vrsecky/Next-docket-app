@@ -13,6 +13,8 @@ import {
   query,
   orderBy,
   addDoc,
+  Timestamp,
+  onSnapshot,
 } from "firebase/firestore";
 import { db } from "../firebase/firebaseInit";
 import { ProductItem, SavedList, User } from "./types";
@@ -236,3 +238,160 @@ export async function updateDocketName(
     throw error;
   }
 }
+export interface StockStatus {
+  [key: string]: {
+    canRun: number;
+    cantRun: number;
+  };
+}
+
+export interface TimberStockDocument {
+  stockStatus: StockStatus;
+  lastUpdated: Timestamp;
+  updatedBy?: string;
+}
+
+// Collection reference
+const TIMBER_STOCK_COLLECTION = "timberStock";
+const STOCK_DOC_ID = "currentStock"; // Single document for all stock data
+
+/**
+ * Save stock status to Firebase
+ */
+export const saveTimberStock = async (
+  stockStatus: StockStatus,
+  userId?: string
+): Promise<void> => {
+  try {
+    const stockRef = doc(db, TIMBER_STOCK_COLLECTION, STOCK_DOC_ID);
+
+    await setDoc(
+      stockRef,
+      {
+        stockStatus,
+        lastUpdated: Timestamp.now(),
+        updatedBy: userId || "anonymous",
+      },
+      { merge: true }
+    );
+
+    console.log("Timber stock saved successfully");
+  } catch (error) {
+    console.error("Error saving timber stock:", error);
+    throw error;
+  }
+};
+
+/**
+ * Get current stock status from Firebase
+ */
+export const getTimberStock = async (): Promise<StockStatus> => {
+  try {
+    const stockRef = doc(db, TIMBER_STOCK_COLLECTION, STOCK_DOC_ID);
+    const stockSnap = await getDoc(stockRef);
+
+    if (stockSnap.exists()) {
+      const data = stockSnap.data() as TimberStockDocument;
+      return data.stockStatus;
+    }
+
+    // Return empty stock if document doesn't exist
+    return {};
+  } catch (error) {
+    console.error("Error getting timber stock:", error);
+    throw error;
+  }
+};
+
+/**
+ * Update a specific stock item
+ */
+export const updateStockItem = async (
+  itemKey: string,
+  canRun: number,
+  cantRun: number,
+  userId?: string
+): Promise<void> => {
+  try {
+    const stockRef = doc(db, TIMBER_STOCK_COLLECTION, STOCK_DOC_ID);
+
+    await updateDoc(stockRef, {
+      [`stockStatus.${itemKey}`]: {
+        canRun,
+        cantRun,
+      },
+      lastUpdated: Timestamp.now(),
+      updatedBy: userId || "anonymous",
+    });
+  } catch (error) {
+    console.error("Error updating stock item:", error);
+    throw error;
+  }
+};
+
+/**
+ * Subscribe to real-time stock updates
+ * Returns an unsubscribe function
+ */
+export const subscribeToTimberStock = (
+  callback: (stockStatus: StockStatus) => void
+): (() => void) => {
+  const stockRef = doc(db, TIMBER_STOCK_COLLECTION, STOCK_DOC_ID);
+
+  const unsubscribe = onSnapshot(
+    stockRef,
+    (snapshot) => {
+      if (snapshot.exists()) {
+        const data = snapshot.data() as TimberStockDocument;
+        callback(data.stockStatus);
+      } else {
+        callback({});
+      }
+    },
+    (error) => {
+      console.error("Error in stock subscription:", error);
+    }
+  );
+
+  return unsubscribe;
+};
+
+/**
+ * Reset all stock to zero
+ */
+export const resetTimberStock = async (userId?: string): Promise<void> => {
+  try {
+    const stockRef = doc(db, TIMBER_STOCK_COLLECTION, STOCK_DOC_ID);
+
+    await setDoc(stockRef, {
+      stockStatus: {},
+      lastUpdated: Timestamp.now(),
+      updatedBy: userId || "anonymous",
+    });
+
+    console.log("Timber stock reset successfully");
+  } catch (error) {
+    console.error("Error resetting timber stock:", error);
+    throw error;
+  }
+};
+
+/**
+ * Get last update timestamp
+ */
+export const getLastUpdateTime = async (): Promise<Date | null> => {
+  try {
+    const stockRef = doc(db, TIMBER_STOCK_COLLECTION, STOCK_DOC_ID);
+    const stockSnap = await getDoc(stockRef);
+
+    if (stockSnap.exists()) {
+      const data = stockSnap.data() as TimberStockDocument;
+      return data.lastUpdated.toDate();
+    }
+
+    return null;
+  } catch (error) {
+    console.error("Error getting last update time:", error);
+    return null;
+  }
+};
