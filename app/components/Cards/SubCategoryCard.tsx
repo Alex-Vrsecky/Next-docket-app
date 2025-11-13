@@ -10,7 +10,7 @@ import {
   arrayRemove,
   deleteDoc,
 } from "firebase/firestore";
-import { db } from "../firebase/firebaseInit";
+import { db } from "@/app/firebase/firebaseInit";
 
 interface SubCategoryCardProps {
   category: string;
