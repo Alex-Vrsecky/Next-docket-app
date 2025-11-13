@@ -121,9 +121,14 @@ export default function CategoryDropdown({
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.1, duration: 0.3 }}
-              className="w-full mb-5"
+              className="w-full mb-4"
             >
-              <div className="grid grid-cols-4 gap-6">
+              <div className="flex justify-end mb-2">
+                <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                  Categories
+                </span>
+              </div>
+              <div className="grid grid-cols-4 gap-4">
                 {categories
                   .filter((c) => c.name)
                   .map((c, index) => (
@@ -154,9 +159,14 @@ export default function CategoryDropdown({
                   animate={{ opacity: 1, height: "auto" }}
                   exit={{ opacity: 0, height: 0 }}
                   transition={{ duration: 0.3 }}
-                  className="w-full mb-5 overflow-hidden"
+                  className="w-full mb-4 overflow-hidden"
                 >
-                  <div className="grid grid-cols-4 gap-6">
+                  <div className="flex justify-end mb-2">
+                    <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                      Subcategories
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-4 gap-4">
                     {availableSubcats.map((sub, index) => (
                       <motion.div
                         key={sub}
@@ -187,8 +197,13 @@ export default function CategoryDropdown({
                   animate={{ opacity: 1, height: "auto" }}
                   exit={{ opacity: 0, height: 0 }}
                   transition={{ duration: 0.3 }}
-                  className="w-full mb-5 overflow-hidden"
+                  className="w-full"
                 >
+                  <div className="flex justify-end mb-2">
+                    <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                      Lengths
+                    </span>
+                  </div>
                   <div className="grid grid-cols-4 gap-4">
                     {[...availableLengths]
                       .sort(
