@@ -141,7 +141,7 @@ export default function Page() {
   }
 
   return (
-    <div className="flex flex-col items-center p-6 min-h-screen bg-gray-50 ">
+    <div className="flex flex-col items-center min-h-screen bg-gray-50 pt-6">
       <NavigationMenu isOpen={isMenuOpen} toggleMenu={toggleMenu} />
       <Header />
       <div className="w-full max-w-[330px] mb-8">
