@@ -1,19 +1,4 @@
-"use client";
-
-import Header from "./components/Header";
-import CategoryDropdown from "./components/CategoryDropdown";
-
-export default function HomePage() {
-  return (
-    <main className="flex flex-col items-center min-h-screen bg-gray-50 p-6">
-      <Header />
-      <CategoryDropdown />
-      <Footer />
-    </main>
-  );
-}
-
-function Footer() {
+export function Footer() {
   const year = new Date().getFullYear();
   return (
     <footer className="w-full bg-gray-100 mt-8">

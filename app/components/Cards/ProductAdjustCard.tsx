@@ -92,6 +92,19 @@ export default function ProductAdjustCard({
     fetchCategories();
   }, []);
 
+  // Update form data when p prop changes
+  useEffect(() => {
+    if (p) {
+      setFormData({ ...p });
+      setShowNewCategory(false);
+      setShowNewSubCategory(false);
+    } else if (isAdding) {
+      setFormData(defaultProduct);
+      setShowNewCategory(false);
+      setShowNewSubCategory(false);
+    }
+  }, [p, isAdding]);
+
   // Get filtered subcategories based on selected category
   const getFilteredSubCategories = (): string[] => {
     if (!formData.category) return [];
@@ -135,19 +148,15 @@ export default function ProductAdjustCard({
   const filteredSubCategories = getFilteredSubCategories();
 
   return (
-    <div className="relative w-full max-w-2xl bg-white rounded-lg shadow-lg p-6">
+    <div className="flex flex-col w-full max-w-[350px] bg-white rounded-lg shadow-lg p-6">
       <h2 className="text-lg font-bold text-gray-900 mb-4">
         {isAdding ? "Add New Product" : "Adjust Product Details"}
       </h2>
 
       {/* Two-column grid for inputs */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+      <div className="grid grid-cols-1 gap-4 mb-6">
         {/* Category */}
-        <div
-          className={
-            showNewSubCategory && !showNewCategory ? "md:col-span-2" : ""
-          }
-        >
+        <div className={"md:col-span-2"}>
           <label className="block text-xs font-medium text-gray-700 mb-1">
             Category
           </label>
@@ -198,11 +207,7 @@ export default function ProductAdjustCard({
         </div>
 
         {/* Subcategory */}
-        <div
-          className={
-            showNewCategory && !showNewSubCategory ? "md:col-span-2" : ""
-          }
-        >
+        <div className={"md:col-span-2"}>
           <label className="block text-xs font-medium text-gray-700 mb-1">
             Subcategory
           </label>
@@ -296,34 +301,6 @@ export default function ProductAdjustCard({
             type="text"
             value={formData.Length}
             onChange={(e) => handleChange("Length", e.target.value)}
-            className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[rgb(13,82,87)] focus:border-transparent"
-          />
-        </div>
-
-        {/* Price with Note */}
-        <div>
-          <label className="block text-xs font-medium text-gray-700 mb-1">
-            Price with Note
-          </label>
-          <input
-            type="text"
-            value={formData.priceWithNote}
-            onChange={(e) => handleChange("priceWithNote", e.target.value)}
-            className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[rgb(13,82,87)] focus:border-transparent"
-          />
-        </div>
-
-        {/* Length/Coverage/Packaging */}
-        <div>
-          <label className="block text-xs font-medium text-gray-700 mb-1">
-            Length/Coverage/Packaging
-          </label>
-          <input
-            type="text"
-            value={formData.LengthCoveragePackaging}
-            onChange={(e) =>
-              handleChange("LengthCoveragePackaging", e.target.value)
-            }
             className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[rgb(13,82,87)] focus:border-transparent"
           />
         </div>
