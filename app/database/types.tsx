@@ -32,4 +32,5 @@ export interface ProductItem {
   Length: string;
   quantity: number;
   addedAt: string;
+  note?: string;
 }

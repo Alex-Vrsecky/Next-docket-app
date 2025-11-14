@@ -10,7 +10,6 @@ import { ArrowBigDownIcon, ArrowBigUpIcon } from "lucide-react";
 interface ProductInterface {
   Desc: string;
   Extra: string;
-  LengthCoveragePackaging: string;
   category: string;
   id: string;
   imageSrc: string;
@@ -74,11 +73,11 @@ export default function ProductCard({
   };
 
   return (
-    <div className={`relative ${isManage ? "h-32" : "h-28"} w-80`}>
+    <div className={`relative ${isManage ? "h-35" : "h-32"} w-100`}>
       {/* Main card background */}
       <div className="w-full h-full bg-white rounded-lg shadow-[0px_0px_4px_1px_rgba(0,0,0,0.25)] overflow-hidden">
         {/* Left section - Text info */}
-        <div className="absolute left-4 top-3 flex flex-col gap-0.5 max-w-[140px]">
+        <div className="absolute left-2 top-3 flex flex-col gap-0.5 max-w-[140px]">
           <p className="text-black text-[10px] font-normal font-inter break-words">
             {p.category || "Category"}
           </p>
@@ -97,9 +96,10 @@ export default function ProductCard({
         </div>
 
         <div className="absolute right-4 top-1/2 -translate-y-1/2">
-          <div className="w-[180px] h-16 flex items-center justify-end mr-3">
+          <div className="w-[180px] h-16 flex items-center justify-end mr-3 mb-2">
             <Barcode
               value={p.productIN || "0000000"}
+              displayValue={false}
               height={40}
               width={1.3}
               fontSize={8}
