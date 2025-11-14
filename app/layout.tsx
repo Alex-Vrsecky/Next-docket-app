@@ -3,6 +3,8 @@ import { Geist, Geist_Mono, Inter } from "next/font/google";
 import "./globals.css";
 import { Providers } from "./providers";
 import { Analytics } from "@vercel/analytics/next";
+import { AuthProvider } from "../app/context/AuthContext";
+import { CartProvider } from "./context/CartContext";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -32,10 +34,15 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} ${inter.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} ${inter.variable} antialiased max-w-md`}
       >
         <Analytics />
-        <Providers>{children}</Providers>
+
+        <Providers>
+          <CartProvider>
+            <AuthProvider>{children}</AuthProvider>
+          </CartProvider>
+        </Providers>
       </body>
     </html>
   );
