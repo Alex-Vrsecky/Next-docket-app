@@ -11,7 +11,6 @@ import {
 } from "@/app/database/firebaseService";
 import { useAuth } from "@/app/context/AuthContext";
 import Header from "../components/Header";
-import { pre } from "framer-motion/client";
 
 interface StockStatus {
   [key: string]: {
