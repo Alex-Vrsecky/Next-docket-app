@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import { timberSizes } from "@/app/timberLinkHelper/stock";
+import { timberSizes } from "../timberLinkHelper/stock";
 import { Loader2, Cloud, CloudOff, Printer, TruckIcon } from "lucide-react";
 import {
   saveTimberStock,
@@ -10,7 +10,7 @@ import {
   resetTimberStock,
 } from "@/app/database/firebaseService";
 import { useAuth } from "@/app/context/AuthContext";
-import Header from "../components/Header";
+import Header from "../../components/Header";
 
 interface StockStatus {
   [key: string]: {

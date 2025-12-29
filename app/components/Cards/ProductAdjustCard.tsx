@@ -103,7 +103,7 @@ export default function ProductAdjustCard({
       setShowNewCategory(false);
       setShowNewSubCategory(false);
     }
-  }, [p, isAdding]);
+  }, [p, isAdding, defaultProduct]);
 
   // Get filtered subcategories based on selected category
   const getFilteredSubCategories = (): string[] => {
