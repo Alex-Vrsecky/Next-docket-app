@@ -19,7 +19,7 @@
     "jsbarcode": "^3.12.1",
     "lucide-react": "^0.553.0",
     "motion": "^12.23.24",
-    "next": "15.3.5",
+    "next": "15.3.8",
     "papaparse": "^5.5.3",
     "react": "^19.1.0",
     "react-barcode": "^1.6.1",
