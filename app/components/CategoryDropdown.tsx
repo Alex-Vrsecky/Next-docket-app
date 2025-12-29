@@ -45,9 +45,9 @@ const CATEGORY_PRIORITY_OBJECT = [
   { aisle: 1, name: "sleepers" },
   { aisle: 999, name: "offcuts" },
   { aisle: 6, name: "yellow tongue" },
-  { aisle: 5, name: "posts" },
+  { aisle: 2, name: "posts" },
   { aisle: 3, name: "decking" },
-  { aisle: 5, name: "cement sheet" },
+  { aisle: 2, name: "cement sheet" },
   { aisle: 6, name: "plaster board" },
   { aisle: 999, name: "blocks / brick" },
   { aisle: 4, name: "concrete" },
@@ -73,7 +73,9 @@ export default function CategoryDropdown() {
   const [selectedSubCategory, setSelectedSubCategory] = useState<string>("");
   const [selectedLength, setSelectedLength] = useState<string>("");
   const [searchQuery, setSearchQuery] = useState<string>("");
-  const [activeView, setActiveView] = useState<"search" | "category">("search");
+  const [activeView, setActiveView] = useState<"search" | "category">(
+    "category"
+  );
   const [showBulkRename, setShowBulkRename] = useState(false);
 
   // Edit/Add states
@@ -537,6 +539,7 @@ export default function CategoryDropdown() {
                         Subcategories
                       </span>
                     </div>
+                    <hr className="border-t border-black/20 mb-2 shadow-sm shadow-black/20" />
                     <div className="grid grid-cols-4 gap-4">
                       {availableSubcats.map((sub, index) => (
                         <motion.div
@@ -575,6 +578,7 @@ export default function CategoryDropdown() {
                         Lengths
                       </span>
                     </div>
+                    <hr className="border-t border-black/20 mb-2 shadow-sm shadow-black/20" />
                     <div className="grid grid-cols-4 gap-4">
                       {[...availableLengths]
                         .sort(
