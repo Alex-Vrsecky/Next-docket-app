@@ -47,7 +47,7 @@ const CATEGORY_PRIORITY_OBJECT = [
   { aisle: 6, name: "yellow tongue" },
   { aisle: 5, name: "posts" },
   { aisle: 3, name: "decking" },
-  { aisle: 2, name: "cement sheet" },
+  { aisle: 5, name: "cement sheet" },
   { aisle: 6, name: "plaster board" },
   { aisle: 999, name: "blocks / brick" },
   { aisle: 4, name: "concrete" },
