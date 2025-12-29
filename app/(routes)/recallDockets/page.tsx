@@ -16,10 +16,10 @@ import {
   createSavedDocket,
   deleteSavedDocket,
 } from "@/app/database/firebaseService";
-import { SavedList } from "../database/types";
+import { SavedList } from "../../database/types";
 import Barcode from "react-barcode";
-import Header from "../components/Header";
-import { Footer } from "../components/Footer";
+import Header from "../../components/Header";
+import { Footer } from "../../components/Footer";
 
 export default function RecallDocketPage() {
   const { cart, removeFromCart, updateQuantity, clearCart, addToCart } =

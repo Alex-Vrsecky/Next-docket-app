@@ -6,9 +6,9 @@ import { doc, getDoc } from "firebase/firestore";
 import { db } from "@/app/firebase/firebaseInit";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { useRouter } from "next/navigation";
-import NavigationMenu from "../components/NavigationMenu";
-import Header from "../components/Header";
-import CategoryDropdown from "../components/CategoryDropdown";
+import NavigationMenu from "../../components/NavigationMenu";
+import Header from "../../components/Header";
+import CategoryDropdown from "../../components/CategoryDropdown";
 
 export interface ProductInterface {
   Desc: string;

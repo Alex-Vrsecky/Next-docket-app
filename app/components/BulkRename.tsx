@@ -1,6 +1,6 @@
 'use client';
 import { useState } from "react";
-import { ProductInterface } from "../productAdjustment/page";
+import { ProductInterface } from "../_types/productInterface";
 import { doc, writeBatch } from "firebase/firestore";
 import { db } from "../firebase/firebaseInit";
 
