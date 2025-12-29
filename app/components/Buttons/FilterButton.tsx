@@ -9,7 +9,7 @@ interface FilterButtonProps {
 export default function FilterButton({name, onPress}: FilterButtonProps) {
   return (
     <div
-      className={`${name.length <= 10 ? "w-20 h-10" : "w-20 h-20"} rounded-lg bg-white border border-gray-300 overflow-hidden`}
+      className={`w-[62px] p-1 rounded-lg bg-white border border-gray-300 overflow-hidden`}
     >
       <Button
         onPress={onPress}

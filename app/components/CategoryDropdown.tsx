@@ -1,6 +1,12 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  useTransition,
+} from "react";
 import {
   collection,
   getDocs,
@@ -21,25 +27,10 @@ import ProductCard from "./Cards/ProductCard";
 import ProductAdjustCard from "./Cards/ProductAdjustCard";
 import { BulkRenameModal } from "./BulkRename";
 import { usePathname } from "next/navigation";
-
-interface ProductInterface {
-  Desc: string;
-  Extra: string;
-  LengthCoveragePackaging: string;
-  category: string;
-  id: string;
-  imageSrc: string;
-  priceWithNote: string;
-  productIN: string;
-  subCategory: string;
-  Length: string;
-}
-
-interface CategoryInterface {
-  name?: string;
-  subCategories?: string[];
-  total?: number;
-}
+import { sortLengths } from "../_lib/sortLengths";
+import { ProductInterface } from "../_types/productInterface";
+import { looksNumericish } from "../_lib/lookNumericish";
+import { CategoryInterface } from "../_types/categoryInterface";
 
 // ---------- helpers (defined outside component) ----------
 const collator = new Intl.Collator(undefined, {
@@ -47,57 +38,32 @@ const collator = new Intl.Collator(undefined, {
   sensitivity: "base",
 });
 
-const CATEGORY_PRIORITY = [
-  "untreated pine",
-  "treated pine",
-  "fencing",
-  "sleepers",
-  "offcuts",
-  "yellowtongue",
-  "post",
-  "poles",
-  "decking",
-  "cement sheets",
-  "plaster",
+const CATEGORY_PRIORITY_OBJECT = [
+  { aisle: 2, name: "untreated pine" },
+  { aisle: 3, name: "treated pine" },
+  { aisle: 6, name: "fencing" },
+  { aisle: 6, name: "sleepers" },
+  { aisle: 999, name: "offcuts" },
+  { aisle: 1, name: "yellow tongue" },
+  { aisle: 5, name: "post" },
+  { aisle: 4, name: "decking" },
+  { aisle: 5, name: "cement sheet" },
+  { aisle: 1, name: "plaster board" },
+  { aisle: 999, name: "blocks / brick" },
+  { aisle: 3, name: "concrete" },
+  { aisle: 999, name: "grass" },
+  { aisle: 999, name: "losp" },
+  { aisle: 2, name: "lvls" },
+  { aisle: 999, name: "masonite" },
+  { aisle: 1, name: "ply mdf particleboard" },
+  { aisle: 999, name: "screening" },
+  { aisle: 1, name: "steel retainer" },
+  { aisle: 999, name: "weather board" },
 ];
 
-function categoryRank(name: string): number {
-  const n = (name || "").toLowerCase();
-  const exactIndex = CATEGORY_PRIORITY.indexOf(n);
-  if (exactIndex !== -1) return exactIndex;
-
-  for (let i = 0; i < CATEGORY_PRIORITY.length; i++) {
-    if (n.includes(CATEGORY_PRIORITY[i])) return i;
-  }
-
-  return Number.POSITIVE_INFINITY;
-}
-
-function lengthToMM(raw: string): number {
-  if (!raw) return Number.POSITIVE_INFINITY;
-  const s = raw.toLowerCase().replace(/\s+/g, "");
-  const m = s.match(/(\d*\.?\d+)/);
-  if (!m) return Number.POSITIVE_INFINITY;
-  const num = parseFloat(m[1]);
-  if (Number.isNaN(num)) return Number.POSITIVE_INFINITY;
-  if (s.includes("mm")) return num;
-  if (s.includes("m")) return Math.round(num * 1000);
-  if (Number.isInteger(num) && num >= 100) return num;
-  return Math.round(num * 1000);
-}
-
-function sortLengths(a: string, b: string) {
-  const da = lengthToMM(a);
-  const db = lengthToMM(b);
-  if (da !== db) return da - db;
-  return collator.compare(a, b);
-}
-
-function looksNumericish(v: string) {
-  return /\d/.test(v || "");
-}
-
 export default function CategoryDropdown() {
+  const [, startTransition] = useTransition();
+
   // All products from DB - fetched once
   const [allProducts, setAllProducts] = useState<ProductInterface[]>([]);
   const [loading, setLoading] = useState(true);
@@ -123,6 +89,7 @@ export default function CategoryDropdown() {
   useEffect(() => {
     (async () => {
       try {
+        console.log("Fetching products from Firestore...");
         setLoading(true);
         const snap = await getDocs(collection(db, "products"));
         const products = snap.docs.map((d) => ({
@@ -130,6 +97,7 @@ export default function CategoryDropdown() {
           ...(d.data() as Omit<ProductInterface, "id">),
         }));
         setAllProducts(products);
+        console.log(`Fetched ${products.length} products.`);
       } catch (error) {
         console.error("Error fetching products:", error);
       } finally {
@@ -138,7 +106,7 @@ export default function CategoryDropdown() {
     })();
   }, []);
 
-  // Derive categories from all products
+  // Derive categories from all products (unsorted initially for faster render)
   const categories = useMemo(() => {
     const byCat: Record<string, Record<string, number>> = {};
 
@@ -151,8 +119,8 @@ export default function CategoryDropdown() {
       if (sub) byCat[cat][sub] = (byCat[cat][sub] || 0) + 1;
     });
 
-    const arr: CategoryInterface[] = Object.entries(byCat)
-      .map(([categoryName, subcatCounts]) => {
+    const arr: CategoryInterface[] = Object.entries(byCat).map(
+      ([categoryName, subcatCounts]) => {
         const total = Object.values(subcatCounts).reduce((a, b) => a + b, 0);
         const entries = Object.entries(subcatCounts);
         const numericish = entries.every(([name]) => looksNumericish(name));
@@ -166,23 +134,43 @@ export default function CategoryDropdown() {
           .map(([subcat]) => subcat);
 
         return { name: categoryName, subCategories, total };
-      })
-      .sort((a, b) => {
-        const ra = categoryRank(a.name || "");
-        const rb = categoryRank(b.name || "");
-        if (ra !== rb) return ra - rb;
-        return collator.compare(a.name || "", b.name || "");
-      });
+      }
+    );
 
     return arr;
   }, [allProducts]);
 
+  // Helper function to find aisle for a category
+  const findAisle = (categoryName: string): number => {
+    const found = CATEGORY_PRIORITY_OBJECT.find(
+      (item) => item.name.toLowerCase() === categoryName.toLowerCase()
+    );
+    return found?.aisle ?? 999; // 999 = unknown/last
+  };
+
+  // Sort categories by aisle (non-blocking with useTransition)
+  const [sortedCategories, setSortedCategories] = useState<CategoryInterface[]>(
+    []
+  );
+
+  useEffect(() => {
+    startTransition(() => {
+      const sorted = [...categories].sort((a, b) => {
+        const aisleA = findAisle(a.name || "");
+        const aisleB = findAisle(b.name || "");
+        if (aisleA !== aisleB) return aisleA - aisleB;
+        return collator.compare(a.name || "", b.name || "");
+      });
+      setSortedCategories(sorted);
+    });
+  }, [categories, startTransition]);
+
   // Derive available subcategories based on selected category
   const availableSubcats = useMemo(() => {
     if (!selectedCategory) return [];
-    const cat = categories.find((c) => c.name === selectedCategory);
+    const cat = sortedCategories.find((c) => c.name === selectedCategory);
     return cat?.subCategories ?? [];
-  }, [selectedCategory, categories]);
+  }, [selectedCategory, sortedCategories]);
 
   // Derive available lengths based on selected category and subcategory
   const availableLengths = useMemo(() => {
@@ -279,28 +267,29 @@ export default function CategoryDropdown() {
   }, [searchQuery]);
 
   // Add new product handler
-  const handleAddNew = () => {
+  const handleAddNew = useCallback(() => {
     setShowBulkRename(false);
     setIsAddingNew((prev) => !prev);
     setEditingProduct(null);
-  };
+  }, []);
 
-  const handleBulkRename = () => {
+  const handleBulkRename = useCallback(() => {
     setShowBulkRename((prev) => !prev);
     setIsAddingNew(false);
     setEditingProduct(null);
-  };
+  }, []);
 
   // Edit product handler
-  const handleEdit = (productId: string) => {
-    console.log("Edit clicked for product ID:", productId);
-    const product = allProducts.find((p) => p.id === productId);
-    console.log("Found product:", product);
-    if (product) {
-      setIsAddingNew(false);
-      setEditingProduct(product);
-    }
-  };
+  const handleEdit = useCallback(
+    (productId: string) => {
+      const product = allProducts.find((p) => p.id === productId);
+      if (product) {
+        setIsAddingNew(false);
+        setEditingProduct(product);
+      }
+    },
+    [allProducts]
+  );
 
   // Save product handler (add or update)
   const handleSave = async (updatedProduct: ProductInterface) => {
@@ -356,55 +345,60 @@ export default function CategoryDropdown() {
   };
 
   // Cancel edit handler
-  const handleCancel = () => {
-    console.log("Cancel clicked");
+  const handleCancel = useCallback(() => {
     setEditingProduct(null);
     setIsAddingNew(false);
-  };
+  }, []);
 
   // Delete product by productIN
-  const handleDelete = async (productIN: string) => {
-    const confirmDelete = window.confirm(
-      `Are you sure you want to delete product ${productIN}?`
-    );
-    if (!confirmDelete) return;
-
-    try {
-      const q = fsQuery(
-        collection(db, "products"),
-        where("productIN", "==", productIN)
+  const handleDelete = useCallback(
+    async (productIN: string) => {
+      const confirmDelete = window.confirm(
+        `Are you sure you want to delete product ${productIN}?`
       );
-      const snapshot = await getDocs(q);
+      if (!confirmDelete) return;
 
-      if (snapshot.empty) {
-        console.warn("No products found with productIN:", productIN);
-        return;
+      try {
+        const q = fsQuery(
+          collection(db, "products"),
+          where("productIN", "==", productIN)
+        );
+        const snapshot = await getDocs(q);
+
+        if (snapshot.empty) {
+          console.warn("No products found with productIN:", productIN);
+          return;
+        }
+
+        await Promise.all(
+          snapshot.docs.map((snap) => deleteDoc(doc(db, "products", snap.id)))
+        );
+
+        setAllProducts((prev) => prev.filter((p) => p.productIN !== productIN));
+
+        // Clear editing state if deleted product was being edited
+        if (editingProduct?.productIN === productIN) {
+          setEditingProduct(null);
+        }
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      } catch (err: any) {
+        console.error("Error deleting products:", err);
+        alert("Failed to delete product: " + err.message);
       }
+    },
+    [editingProduct]
+  );
 
-      await Promise.all(
-        snapshot.docs.map((snap) => deleteDoc(doc(db, "products", snap.id)))
-      );
-
-      setAllProducts((prev) => prev.filter((p) => p.productIN !== productIN));
-
-      // Clear editing state if deleted product was being edited
-      if (editingProduct?.productIN === productIN) {
-        setEditingProduct(null);
+  const handleLengthChange = useCallback(
+    (length: string) => {
+      if (selectedLength === length) {
+        setSelectedLength("");
+      } else {
+        setSelectedLength(length);
       }
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (err: any) {
-      console.error("Error deleting products:", err);
-      alert("Failed to delete product: " + err.message);
-    }
-  };
-
-  const handleLengthChange = (length: string) => {
-    if (selectedLength === length) {
-      setSelectedLength("");
-    } else {
-      setSelectedLength(length);
-    }
-  };
+    },
+    [selectedLength]
+  );
 
   if (loading) {
     return (
@@ -436,7 +430,6 @@ export default function CategoryDropdown() {
                 Add New
               </button>
             </div>
-
           </>
         )}
         <div className="flex gap-2 w-full max-w-[350px] mb-2">
@@ -498,24 +491,33 @@ export default function CategoryDropdown() {
                   </span>
                 </div>
                 <div className="grid grid-cols-4 gap-4">
-                  {categories
+                  {sortedCategories
                     .filter((c) => c.name)
-                    .map((c, index) => (
-                      <motion.div
-                        key={c.name}
-                        initial={{ opacity: 0, scale: 0.8 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        transition={{
-                          delay: 0.1 + index * 0.03,
-                          duration: 0.2,
-                        }}
-                      >
-                        <CategoryButton
-                          name={c.name!}
-                          onPress={() => setSelectedCategory(c.name!)}
-                        />
-                      </motion.div>
-                    ))}
+                    .map((c, index) => {
+                      const aisle = findAisle(c.name || "");
+                      return (
+                        <motion.div
+                          key={c.name}
+                          initial={{ opacity: 0, scale: 0.8 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          transition={{
+                            delay: 0.1 + index * 0.03,
+                            duration: 0.2,
+                          }}
+                          className="relative"
+                        >
+                          {aisle !== 999 && (
+                            <div className="absolute -top-2 -right-2 bg-[rgb(13,82,87)] text-white text-xs font-semibold rounded-full w-6 h-6 flex items-center justify-center z-10">
+                              {aisle}
+                            </div>
+                          )}
+                          <CategoryButton
+                            name={c.name!}
+                            onPress={() => setSelectedCategory(c.name!)}
+                          />
+                        </motion.div>
+                      );
+                    })}
                 </div>
               </motion.div>
 
@@ -528,10 +530,10 @@ export default function CategoryDropdown() {
                     animate={{ opacity: 1, height: "auto" }}
                     exit={{ opacity: 0, height: 0 }}
                     transition={{ duration: 0.3 }}
-                    className="w-full mb-4 overflow-hidden"
+                    className="w-full max-w-[350px] mb-4"
                   >
                     <div className="flex justify-end mb-2">
-                      <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                      <span className="text-xs font-medium text-gray-500 uppercase">
                         Subcategories
                       </span>
                     </div>
@@ -566,7 +568,7 @@ export default function CategoryDropdown() {
                     animate={{ opacity: 1, height: "auto" }}
                     exit={{ opacity: 0, height: 0 }}
                     transition={{ duration: 0.3 }}
-                    className="w-full"
+                    className="w-full max-w-[350px] mb-4"
                   >
                     <div className="flex justify-end mb-2">
                       <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">
@@ -606,27 +608,27 @@ export default function CategoryDropdown() {
         {/* Products Display Section */}
         <div className="w-full flex flex-col items-center justify-center">
           {(editingProduct || isAddingNew) && (
-              <div className="mb-6 flex justify-center">
-                <ProductAdjustCard
-                  p={editingProduct}
-                  onSave={handleSave}
-                  onCancel={handleCancel}
-                  isAdding={isAddingNew}
-                />
-              </div>
-            )}
-
-            {/* Bulk Rename */}
-            {showBulkRename && (
-              <BulkRenameModal
-                products={allProducts}
-                onClose={() => setShowBulkRename(false)}
-                onSave={(updatedProducts) => {
-                  setAllProducts(updatedProducts);
-                  setShowBulkRename(false);
-                }}
+            <div className="mb-6 flex justify-center">
+              <ProductAdjustCard
+                p={editingProduct}
+                onSave={handleSave}
+                onCancel={handleCancel}
+                isAdding={isAddingNew}
               />
-            )}
+            </div>
+          )}
+
+          {/* Bulk Rename */}
+          {showBulkRename && (
+            <BulkRenameModal
+              products={allProducts}
+              onClose={() => setShowBulkRename(false)}
+              onSave={(updatedProducts) => {
+                setAllProducts(updatedProducts);
+                setShowBulkRename(false);
+              }}
+            />
+          )}
           <div className="flex flex-wrap gap-4 justify-center max-w-[300px]">
             {filteredProducts.length > 0 ? (
               filteredProducts.map((p) => (
@@ -644,49 +646,6 @@ export default function CategoryDropdown() {
             )}
           </div>
         </div>
-        {/* Bulk Rename Button */}
-        {isManage && (
-          <>
-            <div className="flex gap-2">
-              <button
-                onClick={handleBulkRename}
-                className="w-full mb-4 bg-[rgb(13,82,87)] text-white rounded-lg font-semibold hover:bg-[rgb(10,65,69)] transition-colors text-xs"
-              >
-                Bulk Rename Categories
-              </button>
-              <button
-                onClick={handleAddNew}
-                className="w-40 py-2 mb-4 bg-[rgb(13,82,87)] text-white rounded-lg font-semibold hover:bg-[rgb(10,65,69)] transition-colors text-xs"
-                title="Add New Product"
-              >
-                Add New
-              </button>
-            </div>
-
-            {(editingProduct || isAddingNew) && (
-              <div className="mb-6 flex justify-center">
-                <ProductAdjustCard
-                  p={editingProduct}
-                  onSave={handleSave}
-                  onCancel={handleCancel}
-                  isAdding={isAddingNew}
-                />
-              </div>
-            )}
-
-            {/* Bulk Rename */}
-            {showBulkRename && (
-              <BulkRenameModal
-                products={allProducts}
-                onClose={() => setShowBulkRename(false)}
-                onSave={(updatedProducts) => {
-                  setAllProducts(updatedProducts);
-                  setShowBulkRename(false);
-                }}
-              />
-            )}
-          </>
-        )}
       </div>
     </div>
   );
