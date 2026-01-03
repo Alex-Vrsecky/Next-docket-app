@@ -5,7 +5,7 @@ import { ClipboardList } from "lucide-react";
 import { signInAnonymously } from "firebase/auth";
 import { auth } from "@/app/firebase/firebaseInit";
 import { createUser } from "@/app/database/firebaseService";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
 export default function Page() {
   const [firstName, setFirstName] = useState("");
@@ -13,6 +13,8 @@ export default function Page() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirect = searchParams.get("redirect") || "/";
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -33,9 +35,9 @@ export default function Page() {
         JSON.stringify({ uid, firstName, lastName })
       );
 
-      // Redirect to main app
-      router.push("/");
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // Redirect to original destination or home
+      router.push(redirect);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       console.error("Sign in error:", err);
       setError(err.message || "Failed to sign in");

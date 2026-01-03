@@ -5,7 +5,7 @@ import { useState, useEffect } from "react";
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "@/app/firebase/firebaseInit";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import NavigationMenu from "../../components/NavigationMenu";
 import Header from "../../components/Header";
 import CategoryDropdown from "../../components/CategoryDropdown";
@@ -25,6 +25,7 @@ export interface ProductInterface {
 
 export default function Page() {
   const router = useRouter();
+  const pathname = usePathname();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -39,7 +40,7 @@ export default function Page() {
 
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (!user) {
-        router.push("/userSignIn");
+        router.push(`/userSignIn?redirect=${encodeURIComponent(pathname)}`);
         return;
       }
 

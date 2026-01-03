@@ -44,6 +44,7 @@ export default function NavigationMenu({
     { name: "Adjustments", href: "productAdjustment" },
     { name: "TimberLink", href: "timberLinkHelper" },
     { name: "Recall Docket", href: "recallDockets" },
+    { name: "Notes", href: "notes" },
   ];
 
   return (

@@ -1,5 +1,5 @@
 'use client';
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "../../firebase/firebaseInit";
@@ -13,6 +13,7 @@ const AUTHORIZED_USERS = ["alex", "karlee", "ben"];
 
 export default function BulkRenameCategoriesPage() {
   const router = useRouter();
+  const pathname = usePathname();
   const [products, setProducts] = useState<ProductInterface[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isAuthorized, setIsAuthorized] = useState(false);
@@ -24,7 +25,7 @@ export default function BulkRenameCategoriesPage() {
 
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (!user) {
-        router.push("/userSignIn");
+        router.push(`/userSignIn?redirect=${encodeURIComponent(pathname)}`);
         return;
       }
 
@@ -100,7 +101,7 @@ export default function BulkRenameCategoriesPage() {
 
   return (
     <div className="flex flex-col items-center min-h-screen bg-gray-50 p-6">
-        <Header />
+      <Header />
       <div className="max-w-4xl mx-auto">
         <div className="mb-6">
           <button

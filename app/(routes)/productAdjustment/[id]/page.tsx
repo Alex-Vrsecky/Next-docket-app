@@ -32,7 +32,9 @@ export default function EditProductPage() {
 
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (!user) {
-        router.push("/userSignIn");
+        router.push(
+          `/userSignIn?redirect=${encodeURIComponent("/productAdjustment")}`
+        );
         return;
       }
 
@@ -159,6 +161,14 @@ export default function EditProductPage() {
             Go Home
           </button>
         </div>
+      </div>
+    );
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <p className="text-gray-600">Loading product...</p>
       </div>
     );
   }

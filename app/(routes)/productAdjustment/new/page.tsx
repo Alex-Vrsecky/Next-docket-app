@@ -29,7 +29,9 @@ export default function NewProductPage() {
 
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (!user) {
-        router.push("/userSignIn");
+        router.push(
+          `/userSignIn?redirect=${encodeURIComponent("/productAdjustment")}`
+        );
         return;
       }
 
@@ -76,6 +78,38 @@ export default function NewProductPage() {
       setLoading(false);
     }
   }, [isCheckingAuth, isAuthorized]);
+
+  if (isCheckingAuth) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <p className="text-gray-600">Loading...</p>
+      </div>
+    );
+  }
+
+  if (!isAuthorized) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <p className="text-red-500 font-semibold">{error}</p>
+          <button
+            onClick={() => router.push("/")}
+            className="mt-4 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+          >
+            Go Home
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <p className="text-gray-600">Loading...</p>
+      </div>
+    );
+  }
 
   const defaultProduct: ProductInterface = {
     Desc: "",
