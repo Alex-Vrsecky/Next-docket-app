@@ -22,7 +22,6 @@ import LocalNavigationButton from "./Buttons/LocalNavigationButton";
 import FilterButton from "./Buttons/FilterButton";
 import SearchBar from "./SearchBar";
 import ProductCard from "./Cards/ProductCard";
-import { BulkRenameModal } from "./BulkRename";
 import { BulkEditModal } from "./BulkEditModal";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { sortLengths } from "../_lib/sortLengths";
@@ -74,10 +73,11 @@ export default function CategoryDropdown() {
   const [activeView, setActiveView] = useState<"search" | "category">(
     "category"
   );
-  const [showBulkRename, setShowBulkRename] = useState(false);
-  
+
   // Selection states
-  const [selectedProducts, setSelectedProducts] = useState<Set<string>>(new Set());
+  const [selectedProducts, setSelectedProducts] = useState<Set<string>>(
+    new Set()
+  );
   const [showBulkEdit, setShowBulkEdit] = useState(false);
 
   const pathname = usePathname();
@@ -284,8 +284,8 @@ export default function CategoryDropdown() {
   }, [router]);
 
   const handleBulkRename = useCallback(() => {
-    setShowBulkRename((prev) => !prev);
-  }, []);
+    router.push("/bulkRenameCategories");
+  }, [router]);
 
   // Selection handlers
   const handleSelectProduct = useCallback((productId: string) => {
@@ -564,24 +564,14 @@ export default function CategoryDropdown() {
 
         {/* Products Display Section */}
         <div className="w-full flex flex-col items-center justify-center">
-          {/* Bulk Rename */}
-          {showBulkRename && (
-            <BulkRenameModal
-              products={allProducts}
-              onClose={() => setShowBulkRename(false)}
-              onSave={(updatedProducts) => {
-                setAllProducts(updatedProducts);
-                setShowBulkRename(false);
-              }}
-            />
-          )}
-
           {/* Bulk Edit */}
           {showBulkEdit && selectedProducts.size > 0 && (
             <BulkEditModal
-              products={Array.from(selectedProducts)
-                .map((id) => allProducts.find((p) => p.id === id))
-                .filter(Boolean) as ProductInterface[]}
+              products={
+                Array.from(selectedProducts)
+                  .map((id) => allProducts.find((p) => p.id === id))
+                  .filter(Boolean) as ProductInterface[]
+              }
               onClose={() => setShowBulkEdit(false)}
               onSave={(updatedProducts) => {
                 const updatedAll = allProducts.map((p) => {

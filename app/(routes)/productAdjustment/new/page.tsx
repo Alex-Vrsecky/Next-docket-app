@@ -148,7 +148,7 @@ export default function NewProductPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="flex flex-col items-center pt-6 min-h-screen bg-gray-50">
       <NavigationMenu isOpen={isMenuOpen} toggleMenu={toggleMenu} />
       <Header />
       <main className="p-4 flex flex-col items-center justify-center">
@@ -156,10 +156,22 @@ export default function NewProductPage() {
           <h1 className="text-2xl font-bold mb-6">Add New Product</h1>
           {showSuccess && (
             <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg flex items-center justify-center gap-3">
-              <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              <svg
+                className="w-6 h-6 text-green-600"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M5 13l4 4L19 7"
+                />
               </svg>
-              <span className="text-green-700 font-semibold">Product created successfully</span>
+              <span className="text-green-700 font-semibold">
+                Product created successfully
+              </span>
             </div>
           )}
           <ProductAdjustCard
