@@ -65,12 +65,15 @@ export default function Page() {
         if (
           firstName === "alex" ||
           firstName === "karlee" ||
-          firstName === "ben"
+          firstName === "ben" ||
+          firstName === "mark"
         ) {
           setIsAuthorized(true);
         } else {
           setIsAuthorized(false);
-          setError("Access denied. Only Alex or Karlee can access this page.");
+          setError(
+            "Access denied. Only Alex, Karlee, Ben, or Mark can access this page."
+          );
         }
       } catch (err) {
         console.error("Error checking authorization:", err);

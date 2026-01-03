@@ -14,8 +14,6 @@ import {
   doc,
   query as fsQuery,
   where,
-  updateDoc,
-  addDoc,
 } from "firebase/firestore";
 import { db } from "../firebase/firebaseInit";
 import { motion, AnimatePresence } from "framer-motion";
@@ -24,9 +22,9 @@ import LocalNavigationButton from "./Buttons/LocalNavigationButton";
 import FilterButton from "./Buttons/FilterButton";
 import SearchBar from "./SearchBar";
 import ProductCard from "./Cards/ProductCard";
-import ProductAdjustCard from "./Cards/ProductAdjustCard";
 import { BulkRenameModal } from "./BulkRename";
-import { usePathname } from "next/navigation";
+import { BulkEditModal } from "./BulkEditModal";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { sortLengths } from "../_lib/sortLengths";
 import { ProductInterface } from "../_types/productInterface";
 import { looksNumericish } from "../_lib/lookNumericish";
@@ -77,15 +75,28 @@ export default function CategoryDropdown() {
     "category"
   );
   const [showBulkRename, setShowBulkRename] = useState(false);
-
-  // Edit/Add states
-  const [editingProduct, setEditingProduct] = useState<ProductInterface | null>(
-    null
-  );
-  const [isAddingNew, setIsAddingNew] = useState(false);
+  
+  // Selection states
+  const [selectedProducts, setSelectedProducts] = useState<Set<string>>(new Set());
+  const [showBulkEdit, setShowBulkEdit] = useState(false);
 
   const pathname = usePathname();
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const isManage = pathname === "/productAdjustment";
+
+  // Initialize filter state from URL parameters
+  useEffect(() => {
+    const category = searchParams.get("category") || "";
+    const subCategory = searchParams.get("subCategory") || "";
+    const length = searchParams.get("length") || "";
+    const search = searchParams.get("search") || "";
+
+    if (category) setSelectedCategory(category);
+    if (subCategory) setSelectedSubCategory(subCategory);
+    if (length) setSelectedLength(length);
+    if (search) setSearchQuery(search);
+  }, [searchParams]);
 
   // Fetch all products once on mount
   useEffect(() => {
@@ -268,128 +279,70 @@ export default function CategoryDropdown() {
     }
   }, [searchQuery]);
 
-  // Add new product handler
   const handleAddNew = useCallback(() => {
-    setShowBulkRename(false);
-    setIsAddingNew((prev) => !prev);
-    setEditingProduct(null);
-  }, []);
+    router.push("/productAdjustment/new");
+  }, [router]);
 
   const handleBulkRename = useCallback(() => {
     setShowBulkRename((prev) => !prev);
-    setIsAddingNew(false);
-    setEditingProduct(null);
   }, []);
 
-  // Edit product handler
-  const handleEdit = useCallback(
-    (productId: string) => {
-      const product = allProducts.find((p) => p.id === productId);
-      if (product) {
-        setIsAddingNew(false);
-        setEditingProduct(product);
-      }
-    },
-    [allProducts]
-  );
-
-  // Save product handler (add or update)
-  const handleSave = async (updatedProduct: ProductInterface) => {
-    try {
-      if (isAddingNew) {
-        // Add new product
-        const productsCollection = collection(db, "products");
-        const docRef = await addDoc(productsCollection, {
-          Desc: updatedProduct.Desc,
-          Extra: updatedProduct.Extra,
-          LengthCoveragePackaging: updatedProduct.LengthCoveragePackaging,
-          category: updatedProduct.category,
-          imageSrc: updatedProduct.imageSrc,
-          priceWithNote: updatedProduct.priceWithNote,
-          productIN: updatedProduct.productIN,
-          subCategory: updatedProduct.subCategory,
-          Length: updatedProduct.Length,
-        });
-
-        const newProduct = {
-          ...updatedProduct,
-          id: docRef.id,
-        };
-
-        setAllProducts((prev) => [...prev, newProduct]);
-        setIsAddingNew(false);
-        setEditingProduct(null);
+  // Selection handlers
+  const handleSelectProduct = useCallback((productId: string) => {
+    setSelectedProducts((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(productId)) {
+        newSet.delete(productId);
       } else {
-        // Update existing product
-        const productRef = doc(db, "products", updatedProduct.id);
-        await updateDoc(productRef, {
-          Desc: updatedProduct.Desc,
-          Extra: updatedProduct.Extra,
-          LengthCoveragePackaging: updatedProduct.LengthCoveragePackaging,
-          category: updatedProduct.category,
-          imageSrc: updatedProduct.imageSrc,
-          priceWithNote: updatedProduct.priceWithNote,
-          productIN: updatedProduct.productIN,
-          subCategory: updatedProduct.subCategory,
-          Length: updatedProduct.Length,
-        });
-
-        setAllProducts((prev) =>
-          prev.map((p) => (p.id === updatedProduct.id ? updatedProduct : p))
-        );
-        setEditingProduct(null);
+        newSet.add(productId);
       }
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (err: any) {
-      console.error("Error saving product:", err);
-      alert("Failed to save product: " + err.message);
-    }
-  };
+      return newSet;
+    });
+  }, []);
 
-  // Cancel edit handler
-  const handleCancel = useCallback(() => {
-    setEditingProduct(null);
-    setIsAddingNew(false);
+  const handleSelectAll = useCallback(() => {
+    if (selectedProducts.size === filteredProducts.length) {
+      setSelectedProducts(new Set());
+    } else {
+      setSelectedProducts(new Set(filteredProducts.map((p) => p.id)));
+    }
+  }, [filteredProducts, selectedProducts.size]);
+
+  const handleBulkEdit = useCallback(() => {
+    setShowBulkEdit((prev) => !prev);
   }, []);
 
   // Delete product by productIN
-  const handleDelete = useCallback(
-    async (productIN: string) => {
-      const confirmDelete = window.confirm(
-        `Are you sure you want to delete product ${productIN}?`
+  const handleDelete = useCallback(async (productIN: string) => {
+    const confirmDelete = window.confirm(
+      `Are you sure you want to delete product ${productIN}?`
+    );
+    if (!confirmDelete) return;
+
+    try {
+      const q = fsQuery(
+        collection(db, "products"),
+        where("productIN", "==", productIN)
       );
-      if (!confirmDelete) return;
+      const snapshot = await getDocs(q);
 
-      try {
-        const q = fsQuery(
-          collection(db, "products"),
-          where("productIN", "==", productIN)
-        );
-        const snapshot = await getDocs(q);
-
-        if (snapshot.empty) {
-          console.warn("No products found with productIN:", productIN);
-          return;
-        }
-
-        await Promise.all(
-          snapshot.docs.map((snap) => deleteDoc(doc(db, "products", snap.id)))
-        );
-
-        setAllProducts((prev) => prev.filter((p) => p.productIN !== productIN));
-
-        // Clear editing state if deleted product was being edited
-        if (editingProduct?.productIN === productIN) {
-          setEditingProduct(null);
-        }
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      } catch (err: any) {
-        console.error("Error deleting products:", err);
-        alert("Failed to delete product: " + err.message);
+      if (snapshot.empty) {
+        console.warn("No products found with productIN:", productIN);
+        return;
       }
-    },
-    [editingProduct]
-  );
+
+      await Promise.all(
+        snapshot.docs.map((snap) => deleteDoc(doc(db, "products", snap.id)))
+      );
+
+      setAllProducts((prev) => prev.filter((p) => p.productIN !== productIN));
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (err: any) {
+      console.error("Error deleting products:", err);
+      alert("Failed to delete product: " + err.message);
+    }
+  }, []);
 
   const handleLengthChange = useCallback(
     (length: string) => {
@@ -611,17 +564,6 @@ export default function CategoryDropdown() {
 
         {/* Products Display Section */}
         <div className="w-full flex flex-col items-center justify-center">
-          {(editingProduct || isAddingNew) && (
-            <div className="mb-6 flex justify-center">
-              <ProductAdjustCard
-                p={editingProduct}
-                onSave={handleSave}
-                onCancel={handleCancel}
-                isAdding={isAddingNew}
-              />
-            </div>
-          )}
-
           {/* Bulk Rename */}
           {showBulkRename && (
             <BulkRenameModal
@@ -633,6 +575,51 @@ export default function CategoryDropdown() {
               }}
             />
           )}
+
+          {/* Bulk Edit */}
+          {showBulkEdit && selectedProducts.size > 0 && (
+            <BulkEditModal
+              products={Array.from(selectedProducts)
+                .map((id) => allProducts.find((p) => p.id === id))
+                .filter(Boolean) as ProductInterface[]}
+              onClose={() => setShowBulkEdit(false)}
+              onSave={(updatedProducts) => {
+                const updatedAll = allProducts.map((p) => {
+                  const updated = updatedProducts.find((u) => u.id === p.id);
+                  return updated || p;
+                });
+                setAllProducts(updatedAll);
+                setShowBulkEdit(false);
+                setSelectedProducts(new Set());
+              }}
+            />
+          )}
+
+          {/* Selection Controls */}
+          {isManage && selectedProducts.size > 0 && (
+            <div className="mb-4 w-full max-w-[350px] flex gap-2">
+              <button
+                onClick={handleSelectAll}
+                className="flex-1 py-2 bg-blue-100 text-blue-700 rounded-lg font-semibold hover:bg-blue-200 transition-colors text-sm"
+              >
+                {selectedProducts.size === filteredProducts.length
+                  ? "Deselect All"
+                  : "Select All"}
+              </button>
+              <button
+                onClick={handleBulkEdit}
+                className="flex-1 py-2 bg-[rgb(13,82,87)] text-white rounded-lg font-semibold hover:bg-[rgb(10,65,69)] transition-colors text-sm"
+              >
+                Edit ({selectedProducts.size})
+              </button>
+              <button
+                onClick={() => setSelectedProducts(new Set())}
+                className="flex-1 py-2 bg-gray-200 text-gray-700 rounded-lg font-semibold hover:bg-gray-300 transition-colors text-sm"
+              >
+                Clear
+              </button>
+            </div>
+          )}
           <div className="flex flex-wrap gap-4 justify-center max-w-[300px]">
             {filteredProducts.length > 0 ? (
               filteredProducts.map((p) => (
@@ -640,7 +627,14 @@ export default function CategoryDropdown() {
                   key={p.id}
                   p={p}
                   onDelete={() => handleDelete(p.productIN)}
-                  onEdit={() => handleEdit(p.id)}
+                  filters={{
+                    category: selectedCategory,
+                    subCategory: selectedSubCategory,
+                    length: selectedLength,
+                    search: searchQuery,
+                  }}
+                  isSelected={selectedProducts.has(p.id)}
+                  onSelect={handleSelectProduct}
                 />
               ))
             ) : (

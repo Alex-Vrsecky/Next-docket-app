@@ -1,4 +1,3 @@
-/* eslint-disable react-hooks/exhaustive-deps */
 "use client";
 
 import React, { useState, useEffect } from "react";
@@ -26,27 +25,27 @@ interface ProductAdjustCardProps {
   isAdding?: boolean;
 }
 
+const DEFAULT_PRODUCT: ProductInterface = {
+  Desc: "",
+  Extra: "",
+  LengthCoveragePackaging: "",
+  category: "",
+  id: "",
+  imageSrc: "",
+  priceWithNote: "",
+  productIN: "",
+  subCategory: "",
+  Length: "",
+};
+
 export default function ProductAdjustCard({
   p,
   onSave,
   onCancel,
   isAdding = false,
 }: ProductAdjustCardProps) {
-  const defaultProduct: ProductInterface = {
-    Desc: "",
-    Extra: "",
-    LengthCoveragePackaging: "",
-    category: "",
-    id: "",
-    imageSrc: "",
-    priceWithNote: "",
-    productIN: "",
-    subCategory: "",
-    Length: "",
-  };
-
   const [formData, setFormData] = useState<ProductInterface>(
-    p ? { ...p } : defaultProduct
+    p ? { ...p } : DEFAULT_PRODUCT
   );
 
   // State for category-subcategory mapping
@@ -100,11 +99,11 @@ export default function ProductAdjustCard({
       setShowNewCategory(false);
       setShowNewSubCategory(false);
     } else if (isAdding) {
-      setFormData(defaultProduct);
+      setFormData(DEFAULT_PRODUCT);
       setShowNewCategory(false);
       setShowNewSubCategory(false);
     }
-  }, [p, isAdding, defaultProduct]);
+  }, [p, isAdding]);
 
   // Get filtered subcategories based on selected category
   const getFilteredSubCategories = (): string[] => {
