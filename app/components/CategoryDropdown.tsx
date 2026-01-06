@@ -67,7 +67,7 @@ export default function CategoryDropdown() {
   const [displayedProducts, setDisplayedProducts] = useState<
     ProductInterface[]
   >([]);
-  const INITIAL_LOAD = 20;
+  const INITIAL_LOAD = 0;
 
   // Filter states
   const [selectedCategory, setSelectedCategory] = useState<string>("");
