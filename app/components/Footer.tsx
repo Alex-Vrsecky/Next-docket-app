@@ -17,6 +17,10 @@ export function Footer() {
           <span className="text-xs">
             Developed & Maintained by Alex Vrsecky
           </span>
+          <span className="text-xs">
+            <br />
+            Inspiration from Jeremy Thompson
+          </span>
         </p>
       </div>
     </footer>
