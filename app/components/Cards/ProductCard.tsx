@@ -2,7 +2,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import Barcode from "react-barcode";
 import { useCart } from "@/app/context/CartContext";
 import { ArrowBigDownIcon, ArrowBigUpIcon } from "lucide-react";
@@ -21,7 +21,6 @@ interface ProductInterface {
 export default function ProductCard({
   p,
   onDelete,
-  filters,
   isSelected = false,
   onSelect,
 }: {
@@ -37,7 +36,6 @@ export default function ProductCard({
   onSelect?: (productId: string) => void;
 }) {
   const pathname = usePathname();
-  const router = useRouter();
   const isManage = pathname === "/productAdjustment";
   const [quantity, setQuantity] = useState(0);
   const { addToCart, cart } = useCart();
@@ -175,26 +173,6 @@ export default function ProductCard({
         {/* Bottom buttons */}
         {isManage && (
           <div className="absolute left-4 bottom-3 flex gap-2">
-            <button
-              onClick={() => {
-                const params = new URLSearchParams();
-                if (filters?.category)
-                  params.append("category", filters.category);
-                if (filters?.subCategory)
-                  params.append("subCategory", filters.subCategory);
-                if (filters?.length) params.append("length", filters.length);
-                if (filters?.search) params.append("search", filters.search);
-                const queryString = params.toString();
-                router.push(
-                  `/productAdjustment/${p.id}${queryString ? `?${queryString}` : ""}`
-                );
-              }}
-              className="h-5 px-3 bg-teal-800 rounded-lg shadow-[0px_0px_4px_1px_rgba(0,0,0,0.25)] flex items-center justify-center hover:bg-teal-700 transition-colors"
-            >
-              <span className="text-white text-[10px] font-bold font-inter">
-                Edit
-              </span>
-            </button>
             <button
               onClick={() => {
                 if (
