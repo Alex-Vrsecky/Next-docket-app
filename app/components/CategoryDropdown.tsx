@@ -28,6 +28,8 @@ import { sortLengths } from "../_lib/sortLengths";
 import { ProductInterface } from "../_types/productInterface";
 import { looksNumericish } from "../_lib/lookNumericish";
 import { CategoryInterface } from "../_types/categoryInterface";
+import { useDebounce } from "../_lib/useDebounce";
+import { useProducts } from "../_lib/hooks/useProducts";
 
 // ---------- helpers (defined outside component) ----------
 const collator = new Intl.Collator(undefined, {
@@ -61,19 +63,26 @@ const CATEGORY_PRIORITY_OBJECT = [
 export default function CategoryDropdown() {
   const [, startTransition] = useTransition();
 
+  // Pagination constants
+  const ITEMS_PER_PAGE = 50;
+
+  // Fetch products using React Query (automatic caching)
+  const { data: products = [], isLoading } = useProducts();
+
   // All products from DB - fetched once
   const [allProducts, setAllProducts] = useState<ProductInterface[]>([]);
-  const [loading, setLoading] = useState(true);
   const [displayedProducts, setDisplayedProducts] = useState<
     ProductInterface[]
   >([]);
-  const INITIAL_LOAD = 0;
+  const [currentPage, setCurrentPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
 
   // Filter states
   const [selectedCategory, setSelectedCategory] = useState<string>("");
   const [selectedSubCategory, setSelectedSubCategory] = useState<string>("");
   const [selectedLength, setSelectedLength] = useState<string>("");
   const [searchQuery, setSearchQuery] = useState<string>("");
+  const debouncedSearchQuery = useDebounce(searchQuery, 300); // Debounce search with 300ms delay
   const [activeView, setActiveView] = useState<"search" | "category">(
     "category"
   );
@@ -104,27 +113,20 @@ export default function CategoryDropdown() {
 
   // Fetch all products once on mount
   useEffect(() => {
-    (async () => {
-      try {
-        console.log("Fetching products from Firestore...");
-        setLoading(true);
-        const snap = await getDocs(collection(db, "products"));
-        const products = snap.docs.map((d) => ({
-          id: d.id,
-          ...(d.data() as Omit<ProductInterface, "id">),
-        }));
-        setAllProducts(products);
-        setDisplayedProducts(products.slice(0, INITIAL_LOAD));
-        console.log(
-          `Fetched ${products.length} products. Displaying first ${INITIAL_LOAD}.`
-        );
-      } catch (error) {
-        console.error("Error fetching products:", error);
-      } finally {
-        setLoading(false);
-      }
-    })();
-  }, []);
+    if (products && products.length > 0) {
+      setAllProducts(products);
+
+      // Display first page
+      const pageSize = ITEMS_PER_PAGE;
+      setDisplayedProducts(products.slice(0, pageSize));
+      setCurrentPage(1);
+      setHasMore(products.length > pageSize);
+
+      console.log(
+        `Fetched ${products.length} products. Displaying first ${pageSize}.`
+      );
+    }
+  }, [products, ITEMS_PER_PAGE]);
 
   // Derive categories from all products (unsorted initially for faster render)
   const categories = useMemo(() => {
@@ -211,11 +213,11 @@ export default function CategoryDropdown() {
 
   // Filter products based on selections AND search query
   const filteredProducts = useMemo(() => {
-    const searchLower = searchQuery.toLowerCase().trim();
+    const searchLower = debouncedSearchQuery.toLowerCase().trim();
 
     return displayedProducts
       .filter((p) => {
-        if (!searchQuery) {
+        if (!debouncedSearchQuery) {
           if (selectedCategory && p.category !== selectedCategory) return false;
           if (selectedSubCategory && p.subCategory !== selectedSubCategory)
             return false;
@@ -246,7 +248,7 @@ export default function CategoryDropdown() {
     selectedCategory,
     selectedSubCategory,
     selectedLength,
-    searchQuery,
+    debouncedSearchQuery,
   ]);
 
   // Reset subcategory when category changes
@@ -279,12 +281,12 @@ export default function CategoryDropdown() {
 
   // Clear category filters when searching
   useEffect(() => {
-    if (searchQuery) {
+    if (debouncedSearchQuery) {
       setSelectedCategory("");
       setSelectedSubCategory("");
       setSelectedLength("");
     }
-  }, [searchQuery]);
+  }, [debouncedSearchQuery]);
 
   // Load more products when a category is selected
   useEffect(() => {
@@ -294,6 +296,28 @@ export default function CategoryDropdown() {
       }, 300);
     }
   }, [selectedCategory, allProducts, displayedProducts.length]);
+
+  // Pagination handlers
+  const handleLoadMore = useCallback(() => {
+    const nextPage = currentPage + 1;
+    const start = (nextPage - 1) * ITEMS_PER_PAGE;
+    const end = start + ITEMS_PER_PAGE;
+    const newProducts = allProducts.slice(0, end);
+    setDisplayedProducts(newProducts);
+    setCurrentPage(nextPage);
+    setHasMore(end < allProducts.length);
+  }, [currentPage, allProducts]);
+
+  const handlePreviousPage = useCallback(() => {
+    if (currentPage > 1) {
+      const prevPage = currentPage - 1;
+      const end = prevPage * ITEMS_PER_PAGE;
+      const newProducts = allProducts.slice(0, end);
+      setDisplayedProducts(newProducts);
+      setCurrentPage(prevPage);
+      setHasMore(true); // Always can go next after going back
+    }
+  }, [currentPage, allProducts]);
 
   const handleAddNew = useCallback(() => {
     router.push("/productAdjustment/new");
@@ -371,7 +395,7 @@ export default function CategoryDropdown() {
     [selectedLength]
   );
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="flex justify-center items-center min-h-screen">
         <p className="text-gray-500">Loading products...</p>
@@ -649,6 +673,30 @@ export default function CategoryDropdown() {
               </p>
             )}
           </div>
+
+          {/* Pagination Controls */}
+          {allProducts.length > ITEMS_PER_PAGE && (
+            <div className="mt-6 w-full max-w-[350px] flex gap-2 justify-center">
+              <button
+                onClick={handlePreviousPage}
+                disabled={currentPage === 1}
+                className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg font-semibold hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm"
+              >
+                ← Previous
+              </button>
+              <div className="px-4 py-2 flex items-center text-sm font-medium text-gray-600">
+                Page {currentPage} of{" "}
+                {Math.ceil(allProducts.length / ITEMS_PER_PAGE)}
+              </div>
+              <button
+                onClick={handleLoadMore}
+                disabled={!hasMore}
+                className="px-4 py-2 bg-[rgb(13,82,87)] text-white rounded-lg font-semibold hover:bg-[rgb(10,65,69)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm"
+              >
+                Next →
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>

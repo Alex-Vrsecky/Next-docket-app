@@ -7,6 +7,7 @@
  */
 
 import * as admin from "firebase-admin";
+import * as fs from "fs";
 import * as path from "path";
 
 // Initialize Firebase Admin
@@ -15,9 +16,11 @@ const serviceAccountPath = path.join(
   "../firebase-service-account.json"
 );
 
+const serviceAccount = JSON.parse(fs.readFileSync(serviceAccountPath, "utf-8"));
+
 try {
   admin.initializeApp({
-    credential: admin.credential.cert(require(serviceAccountPath)),
+    credential: admin.credential.cert(serviceAccount),
   });
 } catch (error) {
   console.error("Failed to initialize Firebase Admin:", error);
