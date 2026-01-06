@@ -2,8 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Barcode from "react-barcode";
-import { collection, getDocs } from "firebase/firestore";
-import { db } from "@/app/firebase/firebaseInit";
+import { useCategories } from "@/app/context/CategoriesContext";
 
 interface ProductInterface {
   Desc: string;
@@ -47,50 +46,30 @@ export default function ProductAdjustCard({
   const [formData, setFormData] = useState<ProductInterface>(
     p ? { ...p } : DEFAULT_PRODUCT
   );
+  const { categoryNames, categories } = useCategories();
 
   // State for category-subcategory mapping
   const [categorySubCategoryMap, setCategorySubCategoryMap] = useState<
     Map<string, Set<string>>
   >(new Map());
-  const [existingCategories, setExistingCategories] = useState<string[]>([]);
-  const [loadingCategories, setLoadingCategories] = useState(true);
 
   // State for showing new input fields
   const [showNewCategory, setShowNewCategory] = useState(false);
   const [showNewSubCategory, setShowNewSubCategory] = useState(false);
 
-  // Fetch existing categories and subcategories from Firebase
+  // Build category map from context categories
   useEffect(() => {
-    const fetchCategories = async () => {
-      try {
-        const productsRef = collection(db, "products");
-        const snapshot = await getDocs(productsRef);
-
-        const categoryMap = new Map<string, Set<string>>();
-
-        snapshot.forEach((doc) => {
-          const data = doc.data();
-          if (data.category) {
-            if (!categoryMap.has(data.category)) {
-              categoryMap.set(data.category, new Set());
-            }
-            if (data.subCategory) {
-              categoryMap.get(data.category)!.add(data.subCategory);
-            }
-          }
-        });
-
-        setCategorySubCategoryMap(categoryMap);
-        setExistingCategories(Array.from(categoryMap.keys()).sort());
-      } catch (error) {
-        console.error("Error fetching categories:", error);
-      } finally {
-        setLoadingCategories(false);
+    const categoryMap = new Map<string, Set<string>>();
+    categories.forEach((cat) => {
+      if (cat.name) {
+        categoryMap.set(
+          cat.name,
+          new Set(cat.subCategories || [])
+        );
       }
-    };
-
-    fetchCategories();
-  }, []);
+    });
+    setCategorySubCategoryMap(categoryMap);
+  }, [categories]);
 
   // Update form data when p prop changes
   useEffect(() => {
@@ -164,14 +143,13 @@ export default function ProductAdjustCard({
             <select
               value={formData.category}
               onChange={handleCategoryChange}
-              disabled={loadingCategories}
               className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[rgb(13,82,87)] focus:border-transparent bg-white"
             >
               <option value="">Select a category</option>
               <option value="__new__" className="font-semibold text-green-700">
                 + Add New Category
               </option>
-              {existingCategories.map((cat) => (
+              {categoryNames.map((cat) => (
                 <option key={cat} value={cat}>
                   {cat}
                 </option>
@@ -215,7 +193,7 @@ export default function ProductAdjustCard({
             <select
               value={formData.subCategory}
               onChange={handleSubCategoryChange}
-              disabled={loadingCategories || !formData.category}
+              disabled={!formData.category}
               className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[rgb(13,82,87)] focus:border-transparent bg-white disabled:bg-gray-100 disabled:cursor-not-allowed"
             >
               <option value="">

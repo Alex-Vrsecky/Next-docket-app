@@ -18,6 +18,105 @@ import {
 } from "firebase/firestore";
 import { db } from "../firebase/firebaseInit";
 import { ProductItem, SavedList, User } from "./types";
+import { CategoryInterface } from "../_types/categoryInterface";
+
+// ============= META COLLECTION (Categories) =============
+
+/**
+ * Get all categories from the meta collection
+ */
+export async function getCategories(): Promise<CategoryInterface[]> {
+  try {
+    const metaRef = doc(db, "meta", "categories");
+    const metaSnap = await getDoc(metaRef);
+
+    if (metaSnap.exists()) {
+      const data = metaSnap.data();
+      return data.categories || [];
+    }
+
+    // If meta collection doesn't exist, build from products
+    return await buildCategoriesFromProducts();
+  } catch (error) {
+    console.error("Error getting categories from meta:", error);
+    return [];
+  }
+}
+
+/**
+ * Build categories from products collection (fallback)
+ */
+async function buildCategoriesFromProducts(): Promise<CategoryInterface[]> {
+  try {
+    const productsRef = collection(db, "products");
+    const snapshot = await getDocs(productsRef);
+
+    const categoryMap = new Map<string, Set<string>>();
+
+    snapshot.forEach((doc) => {
+      const data = doc.data();
+      if (data.category) {
+        if (!categoryMap.has(data.category)) {
+          categoryMap.set(data.category, new Set());
+        }
+        if (data.subCategory) {
+          categoryMap.get(data.category)!.add(data.subCategory);
+        }
+      }
+    });
+
+    const categories: CategoryInterface[] = Array.from(
+      categoryMap.entries()
+    ).map(([name, subCats]) => ({
+      name,
+      subCategories: Array.from(subCats).sort(),
+    }));
+
+    return categories.sort((a, b) =>
+      (a.name || "").localeCompare(b.name || "")
+    );
+  } catch (error) {
+    console.error("Error building categories from products:", error);
+    return [];
+  }
+}
+
+/**
+ * Update the meta collection with categories
+ */
+export async function updateCategoriesMeta(
+  categories: CategoryInterface[]
+): Promise<void> {
+  try {
+    const metaRef = doc(db, "meta", "categories");
+    await setDoc(
+      metaRef,
+      {
+        categories,
+        lastUpdated: serverTimestamp(),
+      },
+      { merge: true }
+    );
+  } catch (error) {
+    console.error("Error updating categories meta:", error);
+    throw error;
+  }
+}
+
+/**
+ * Rebuild the meta collection from the products collection
+ * Use this to sync categories data
+ */
+export async function rebuildCategoriesMeta(): Promise<void> {
+  try {
+    const categories = await buildCategoriesFromProducts();
+    await updateCategoriesMeta(categories);
+    console.log("Categories meta rebuilt successfully");
+  } catch (error) {
+    console.error("Error rebuilding categories meta:", error);
+    throw error;
+  }
+}
 
 // Create or update user
 export async function createUser(
