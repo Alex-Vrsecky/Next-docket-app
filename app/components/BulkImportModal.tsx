@@ -252,7 +252,10 @@ export function BulkImportModal({
                   className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-600"
                 >
                   <option value="">Select a category</option>
-                  <option value="__new__" className="font-semibold text-green-700">
+                  <option
+                    value="__new__"
+                    className="font-semibold text-green-700"
+                  >
                     + Add New Category
                   </option>
                   {categoryNames.map((cat) => (
@@ -304,7 +307,10 @@ export function BulkImportModal({
                   disabled={!formData.category}
                 >
                   <option value="">Select a subcategory</option>
-                  <option value="__new__" className="font-semibold text-green-700">
+                  <option
+                    value="__new__"
+                    className="font-semibold text-green-700"
+                  >
                     + Add New Subcategory
                   </option>
                   {getFilteredSubCategories().map((subcat) => (
@@ -365,7 +371,7 @@ export function BulkImportModal({
                 name="lengths"
                 value={formData.lengths}
                 onChange={handleChange}
-                placeholder="e.g., 1800, 2400, 3000, 3600"
+                placeholder="e.g., 1800mm, 2.4m, 3000mm, 3m"
                 rows={3}
                 className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-600"
               />
@@ -384,12 +390,13 @@ export function BulkImportModal({
                 name="inNumbers"
                 value={formData.inNumbers}
                 onChange={handleChange}
-                placeholder="e.g., P001, P002, P003, P004"
+                placeholder="e.g., 1034784, 3782908, 123763, 198273"
                 rows={3}
                 className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-600"
               />
               <p className="text-xs text-gray-500 mt-1">
-                Enter custom IN numbers separated by commas. Must match the number of lengths.
+                Enter custom IN numbers separated by commas. Must match the
+                number of lengths.
               </p>
             </div>
 
@@ -397,7 +404,8 @@ export function BulkImportModal({
             {formData.lengths && (
               <div className="p-3 bg-gray-50 rounded-lg">
                 <p className="text-xs font-medium text-gray-700 mb-2">
-                  Preview: {formData.lengths.split(",").filter((l) => l.trim()).length}{" "}
+                  Preview:{" "}
+                  {formData.lengths.split(",").filter((l) => l.trim()).length}{" "}
                   products will be created
                 </p>
                 <div className="text-xs text-gray-600 space-y-1">
