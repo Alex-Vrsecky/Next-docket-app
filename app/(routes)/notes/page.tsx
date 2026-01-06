@@ -35,42 +35,63 @@ export default function NotesPage() {
   // Check authentication
   useEffect(() => {
     const auth = getAuth();
+    let isMounted = true;
+    const timeoutId = setTimeout(() => {
+      if (isMounted) {
+        setIsCheckingAuth(false);
+        setError("Authentication check timed out");
+      }
+    }, 10000); // 10 second timeout
 
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (!isMounted) return;
+
+      clearTimeout(timeoutId);
+
       if (!user) {
         router.push(`/userSignIn?redirect=${encodeURIComponent(pathname)}`);
         return;
       }
 
       try {
-        let firstName = '';
-        let lastName = '';
+        let firstName = "";
+        let lastName = "";
 
         if (user.displayName) {
-          const nameParts = user.displayName.split(' ');
+          const nameParts = user.displayName.split(" ");
           firstName = nameParts[0];
           lastName = nameParts[nameParts.length - 1];
         } else {
-          const userDoc = await getDoc(doc(db, 'users', user.uid));
+          const userDoc = await getDoc(doc(db, "users", user.uid));
           if (userDoc.exists()) {
             const userData = userDoc.data();
-            firstName = userData.firstName || userData.name || user.email?.split('@')[0] || '';
-            lastName = userData.lastName || '';
+            firstName =
+              userData.firstName ||
+              userData.name ||
+              user.email?.split("@")[0] ||
+              "";
+            lastName = userData.lastName || "";
           }
         }
 
         setUserName(`${firstName} ${lastName.charAt(0).toUpperCase()}`);
         setIsAuthorized(true);
       } catch (err) {
-        console.error('Error checking authentication:', err);
-        setError('Error checking authentication.');
+        console.error("Error checking authentication:", err);
+        setError("Error checking authentication.");
       } finally {
-        setIsCheckingAuth(false);
+        if (isMounted) {
+          setIsCheckingAuth(false);
+        }
       }
     });
 
-    return () => unsubscribe();
-  }, [router]);
+    return () => {
+      isMounted = false;
+      clearTimeout(timeoutId);
+      unsubscribe();
+    };
+  }, [router, pathname]);
 
   // Fetch notes
   useEffect(() => {

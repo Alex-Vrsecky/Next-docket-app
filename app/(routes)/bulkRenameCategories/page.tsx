@@ -22,8 +22,18 @@ export default function BulkRenameCategoriesPage() {
   // Check authentication and authorization
   useEffect(() => {
     const auth = getAuth();
+    let isMounted = true;
+    const timeoutId = setTimeout(() => {
+      if (isMounted) {
+        setIsCheckingAuth(false);
+      }
+    }, 10000); // 10 second timeout
 
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (!isMounted) return;
+
+      clearTimeout(timeoutId);
+
       if (!user) {
         router.push(`/userSignIn?redirect=${encodeURIComponent(pathname)}`);
         return;
@@ -49,7 +59,9 @@ export default function BulkRenameCategoriesPage() {
 
         if (AUTHORIZED_USERS.includes(firstName)) {
           setIsAuthorized(true);
-          setIsCheckingAuth(false);
+          if (isMounted) {
+            setIsCheckingAuth(false);
+          }
         } else {
           router.push("/");
           return;
@@ -59,8 +71,12 @@ export default function BulkRenameCategoriesPage() {
       }
     });
 
-    return () => unsubscribe();
-  }, [router]);
+    return () => {
+      isMounted = false;
+      clearTimeout(timeoutId);
+      unsubscribe();
+    };
+  }, [router, pathname]);
 
   // Fetch products
   useEffect(() => {

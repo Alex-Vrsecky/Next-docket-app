@@ -1,7 +1,7 @@
 "use client";
 
 import { ClipboardList, Menu, NotebookPen } from "lucide-react";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useRouter } from "next/navigation";
 import { useCart } from "../context/CartContext";
@@ -9,26 +9,23 @@ import NavigationMenu from "./NavigationMenu";
 
 export default function Header() {
   const [isOpen, setIsOpen] = useState(false);
+  const [userName, setUserName] = useState<string | null>(null);
   const { firebaseUser, loading } = useAuth();
 
   const toggleMenu = () => setIsOpen(!isOpen);
 
-  // Get user name from localStorage
-  const getUserName = () => {
-    if (typeof window !== "undefined") {
-      const userJson = localStorage.getItem("user");
-      if (userJson) {
-        const user = JSON.parse(userJson);
-        return user.firstName;
-      }
+  // Get user name from localStorage - only on client
+  useEffect(() => {
+    const userJson = localStorage.getItem("user");
+    if (userJson) {
+      const user = JSON.parse(userJson);
+      setUserName(user.firstName);
     }
-    return null;
-  };
+  }, []);
 
-  const userName = getUserName();
   const router = useRouter();
   const cart = useCart().cart;
-  
+
   return (
     <>
       <NavigationMenu isOpen={isOpen} toggleMenu={toggleMenu} />

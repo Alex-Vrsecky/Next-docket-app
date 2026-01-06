@@ -64,6 +64,10 @@ export default function CategoryDropdown() {
   // All products from DB - fetched once
   const [allProducts, setAllProducts] = useState<ProductInterface[]>([]);
   const [loading, setLoading] = useState(true);
+  const [displayedProducts, setDisplayedProducts] = useState<
+    ProductInterface[]
+  >([]);
+  const INITIAL_LOAD = 20;
 
   // Filter states
   const [selectedCategory, setSelectedCategory] = useState<string>("");
@@ -110,7 +114,10 @@ export default function CategoryDropdown() {
           ...(d.data() as Omit<ProductInterface, "id">),
         }));
         setAllProducts(products);
-        console.log(`Fetched ${products.length} products.`);
+        setDisplayedProducts(products.slice(0, INITIAL_LOAD));
+        console.log(
+          `Fetched ${products.length} products. Displaying first ${INITIAL_LOAD}.`
+        );
       } catch (error) {
         console.error("Error fetching products:", error);
       } finally {
@@ -206,7 +213,7 @@ export default function CategoryDropdown() {
   const filteredProducts = useMemo(() => {
     const searchLower = searchQuery.toLowerCase().trim();
 
-    return allProducts
+    return displayedProducts
       .filter((p) => {
         if (!searchQuery) {
           if (selectedCategory && p.category !== selectedCategory) return false;
@@ -235,7 +242,7 @@ export default function CategoryDropdown() {
       })
       .sort((a, b) => sortLengths(a.Length, b.Length));
   }, [
-    allProducts,
+    displayedProducts,
     selectedCategory,
     selectedSubCategory,
     selectedLength,
@@ -278,6 +285,15 @@ export default function CategoryDropdown() {
       setSelectedLength("");
     }
   }, [searchQuery]);
+
+  // Load more products when a category is selected
+  useEffect(() => {
+    if (selectedCategory && allProducts.length > displayedProducts.length) {
+      setTimeout(() => {
+        setDisplayedProducts(allProducts);
+      }, 300);
+    }
+  }, [selectedCategory, allProducts, displayedProducts.length]);
 
   const handleAddNew = useCallback(() => {
     router.push("/productAdjustment/new");

@@ -37,8 +37,19 @@ export default function Page() {
   // Check authentication and authorization
   useEffect(() => {
     const auth = getAuth();
+    let isMounted = true;
+    const timeoutId = setTimeout(() => {
+      if (isMounted) {
+        setIsCheckingAuth(false);
+        setError("Authentication check timed out");
+      }
+    }, 10000); // 10 second timeout
 
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (!isMounted) return;
+
+      clearTimeout(timeoutId);
+
       if (!user) {
         router.push(`/userSignIn?redirect=${encodeURIComponent(pathname)}`);
         return;
@@ -80,13 +91,19 @@ export default function Page() {
         console.error("Error checking authorization:", err);
         setIsAuthorized(false);
         setError("Error checking authorization.");
+      } finally {
+        if (isMounted) {
+          setIsCheckingAuth(false);
+        }
       }
-
-      setIsCheckingAuth(false);
     });
 
-    return () => unsubscribe();
-  }, [router]);
+    return () => {
+      isMounted = false;
+      clearTimeout(timeoutId);
+      unsubscribe();
+    };
+  }, [router, pathname]);
 
   // Load products from Firebase
   useEffect(() => {

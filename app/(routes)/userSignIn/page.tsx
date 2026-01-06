@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ClipboardList } from "lucide-react";
 import { signInAnonymously } from "firebase/auth";
 import { auth } from "@/app/firebase/firebaseInit";
@@ -12,9 +12,16 @@ export default function Page() {
   const [lastName, setLastName] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [year, setYear] = useState(2026);
   const router = useRouter();
   const searchParams = useSearchParams();
-  const redirect = searchParams.get("redirect") || "/";
+  const [redirect, setRedirect] = useState("/");
+
+  useEffect(() => {
+    const redirectParam = searchParams.get("redirect") || "/";
+    setRedirect(redirectParam);
+    setYear(new Date().getFullYear());
+  }, [searchParams]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -124,7 +131,7 @@ export default function Page() {
 
         {/* Footer */}
         <p className="text-center text-gray-500 text-sm mt-6">
-          © {new Date().getFullYear()} Docket App
+          © {year} Docket App
         </p>
       </div>
     </div>

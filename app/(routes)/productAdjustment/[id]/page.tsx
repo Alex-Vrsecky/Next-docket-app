@@ -29,8 +29,19 @@ export default function EditProductPage() {
   // Check authentication and authorization
   useEffect(() => {
     const auth = getAuth();
+    let isMounted = true;
+    const timeoutId = setTimeout(() => {
+      if (isMounted) {
+        setIsCheckingAuth(false);
+        setError("Authentication check timed out");
+      }
+    }, 10000); // 10 second timeout
 
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (!isMounted) return;
+
+      clearTimeout(timeoutId);
+
       if (!user) {
         router.push(
           `/userSignIn?redirect=${encodeURIComponent("/productAdjustment")}`
@@ -63,17 +74,25 @@ export default function EditProductPage() {
           setIsAuthorized(true);
         } else {
           setIsAuthorized(false);
-          setError("Access denied. Only authorized users can access this page.");
+          setError(
+            "Access denied. Only authorized users can access this page."
+          );
         }
       } catch (err) {
         console.error("Error checking authorization:", err);
         setError("Error checking authorization.");
       } finally {
-        setIsCheckingAuth(false);
+        if (isMounted) {
+          setIsCheckingAuth(false);
+        }
       }
     });
 
-    return () => unsubscribe();
+    return () => {
+      isMounted = false;
+      clearTimeout(timeoutId);
+      unsubscribe();
+    };
   }, [router]);
 
   // Fetch product data
