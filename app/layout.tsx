@@ -5,6 +5,7 @@ import { Providers } from "./providers";
 import { Analytics } from "@vercel/analytics/next";
 import { AuthProvider } from "../app/context/AuthContext";
 import { CartProvider } from "./context/CartContext";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -37,6 +38,7 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} ${inter.variable} antialiased max-w-md`}
       >
         <Analytics />
+        <SpeedInsights />
 
         <Providers>
           <CartProvider>
