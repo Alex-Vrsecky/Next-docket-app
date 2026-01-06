@@ -71,7 +71,6 @@ export default function RecallDocketPage() {
         Length: item.Length,
         quantity: item.quantity,
         productIN: item.productIN,
-        priceWithNote: item.priceWithNote,
         note: productNotes[item.productIN] || "",
         addedAt: new Date().toISOString(),
       }));
@@ -119,7 +118,6 @@ export default function RecallDocketPage() {
         subCategory: product.subCategory,
         Length: product.Length,
         quantity: product.quantity,
-        priceWithNote: "",
       };
       addToCart(cartProduct);
 

@@ -5,7 +5,6 @@ export interface ProductInterface {
   category: string;
   id: string;
   imageSrc: string;
-  priceWithNote: string;
   productIN: string;
   subCategory: string;
   Length: string;

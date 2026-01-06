@@ -11,7 +11,6 @@ interface CartProduct {
   subCategory: string;
   Length: string;
   quantity: number;
-  priceWithNote: string;
 }
 
 interface CartContextType {

@@ -13,7 +13,6 @@ interface ProductInterface {
   category: string;
   id: string;
   imageSrc: string;
-  priceWithNote: string;
   productIN: string;
   subCategory: string;
   Length: string;
@@ -71,7 +70,6 @@ export default function ProductCard({
       subCategory: p.subCategory,
       Length: p.Length,
       quantity: quantity,
-      priceWithNote: p.priceWithNote,
     };
 
     addToCart(cartProduct);
@@ -85,7 +83,9 @@ export default function ProductCard({
   return (
     <div className={`relative ${isManage ? "h-35" : "h-32"} w-100`}>
       {/* Main card background */}
-      <div className={`w-full h-full bg-white rounded-lg shadow-[0px_0px_4px_1px_rgba(0,0,0,0.25)] overflow-hidden ${isSelected ? "ring-2 ring-blue-500" : ""}`}>
+      <div
+        className={`w-full h-full bg-white rounded-lg shadow-[0px_0px_4px_1px_rgba(0,0,0,0.25)] overflow-hidden ${isSelected ? "ring-2 ring-blue-500" : ""}`}
+      >
         {/* Selection checkbox */}
         {isManage && onSelect && (
           <div className="absolute top-2 left-2 z-10">
@@ -99,7 +99,9 @@ export default function ProductCard({
         )}
 
         {/* Left section - Text info */}
-        <div className={`absolute ${isManage && onSelect ? "left-8" : "left-2"} top-3 flex flex-col gap-0.5 max-w-[140px]`}>
+        <div
+          className={`absolute ${isManage && onSelect ? "left-8" : "left-2"} top-3 flex flex-col gap-0.5 max-w-[140px]`}
+        >
           <p className="text-black text-[10px] font-normal font-inter break-words">
             {p.category || "Category"}
           </p>
@@ -176,12 +178,16 @@ export default function ProductCard({
             <button
               onClick={() => {
                 const params = new URLSearchParams();
-                if (filters?.category) params.append("category", filters.category);
-                if (filters?.subCategory) params.append("subCategory", filters.subCategory);
+                if (filters?.category)
+                  params.append("category", filters.category);
+                if (filters?.subCategory)
+                  params.append("subCategory", filters.subCategory);
                 if (filters?.length) params.append("length", filters.length);
                 if (filters?.search) params.append("search", filters.search);
                 const queryString = params.toString();
-                router.push(`/productAdjustment/${p.id}${queryString ? `?${queryString}` : ""}`);
+                router.push(
+                  `/productAdjustment/${p.id}${queryString ? `?${queryString}` : ""}`
+                );
               }}
               className="h-5 px-3 bg-teal-800 rounded-lg shadow-[0px_0px_4px_1px_rgba(0,0,0,0.25)] flex items-center justify-center hover:bg-teal-700 transition-colors"
             >

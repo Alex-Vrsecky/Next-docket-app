@@ -11,7 +11,6 @@ interface ProductInterface {
   category: string;
   id: string;
   imageSrc: string;
-  priceWithNote: string;
   productIN: string;
   subCategory: string;
   Length: string;
@@ -31,7 +30,6 @@ const DEFAULT_PRODUCT: ProductInterface = {
   category: "",
   id: "",
   imageSrc: "",
-  priceWithNote: "",
   productIN: "",
   subCategory: "",
   Length: "",

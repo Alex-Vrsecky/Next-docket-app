@@ -319,9 +319,6 @@ export default function CategoryDropdown() {
     }
   }, [currentPage, allProducts]);
 
-  const handleAddNew = useCallback(() => {
-    router.push("/productAdjustment/new");
-  }, [router]);
 
   const handleBulkRename = useCallback(() => {
     router.push("/bulkRenameCategories");
@@ -413,16 +410,9 @@ export default function CategoryDropdown() {
             <div className="flex gap-2">
               <button
                 onClick={handleBulkRename}
-                className="w-full mb-4 bg-[rgb(13,82,87)] text-white rounded-lg font-semibold hover:bg-[rgb(10,65,69)] transition-colors text-xs"
+                className="w-full h-8 mb-4 bg-[rgb(13,82,87)] text-white rounded-lg font-semibold hover:bg-[rgb(10,65,69)] transition-colors text-xs"
               >
                 Bulk Rename Categories
-              </button>
-              <button
-                onClick={handleAddNew}
-                className="w-40 py-2 mb-4 bg-[rgb(13,82,87)] text-white rounded-lg font-semibold hover:bg-[rgb(10,65,69)] transition-colors text-xs"
-                title="Add New Product"
-              >
-                Add New
               </button>
             </div>
           </>

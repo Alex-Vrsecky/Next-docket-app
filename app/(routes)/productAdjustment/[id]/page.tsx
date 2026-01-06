@@ -136,7 +136,6 @@ export default function EditProductPage() {
         LengthCoveragePackaging: updatedProduct.LengthCoveragePackaging || "",
         category: updatedProduct.category || "",
         imageSrc: updatedProduct.imageSrc || "",
-        priceWithNote: updatedProduct.priceWithNote || "",
         productIN: updatedProduct.productIN || "",
         subCategory: updatedProduct.subCategory || "",
         Length: updatedProduct.Length || "",

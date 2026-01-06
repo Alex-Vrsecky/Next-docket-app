@@ -137,7 +137,6 @@ export default function NewProductPage() {
     category: "",
     id: "",
     imageSrc: "",
-    priceWithNote: "",
     productIN: "",
     subCategory: "",
     Length: "",
@@ -152,7 +151,6 @@ export default function NewProductPage() {
         LengthCoveragePackaging: newProduct.LengthCoveragePackaging || "",
         category: newProduct.category || "",
         imageSrc: newProduct.imageSrc || "",
-        priceWithNote: newProduct.priceWithNote || "",
         productIN: newProduct.productIN || "",
         subCategory: newProduct.subCategory || "",
         Length: newProduct.Length || "",
@@ -161,11 +159,16 @@ export default function NewProductPage() {
       setShowSuccess(true);
       setTimeout(() => {
         const queryString = searchParams.toString();
-        router.push(`/productAdjustment${queryString ? `?${queryString}` : ""}`);
+        router.push(
+          `/productAdjustment${queryString ? `?${queryString}` : ""}`
+        );
       }, 500);
     } catch (err) {
       console.error("Error creating product:", err);
-      alert("Failed to create product: " + (err instanceof Error ? err.message : String(err)));
+      alert(
+        "Failed to create product: " +
+          (err instanceof Error ? err.message : String(err))
+      );
     }
   };
 

@@ -74,7 +74,6 @@ export function BulkEditModal({
     "Length",
     "Desc",
     "Extra",
-    "priceWithNote",
   ];
 
   return (
